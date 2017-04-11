@@ -555,7 +555,69 @@ public class Player {
         } catch (SQLException e) {TNL=Exp+1;}
         return TNL;
     }
-
+//************************************ Def - GetRoutes
+    public String GetRoutes(){
+        MyUtils.Logwrite("GetRoutes","Started by "+Name, r.freeMemory());
+        int Caravans, Distance,LatS,LngS,LatF,LngF,profit;
+        String CarGUID, StartGUID, StartName,FinishGUID,FinishName;
+        ResultSet rs;
+        JSONArray jarr2;
+        if (GUID.equals("")) {jresult.put("Result","DB001");jresult.put("Message","Player not found."); return jresult.toString();}
+        PreparedStatement query;
+        try {
+            query = con.prepareStatement("select count(1) from Caravans where Finish is not null and PGUID=?");
+            query.setString(1, GUID);
+            rs = query.executeQuery();
+            rs.first();
+            Caravans = rs.getInt(1);
+            rs.close();
+            jresult.put("Caravans", Caravans);
+            jarr2 = new JSONArray();
+            //query=con.prepareStatement("select z1.GUID,z1.Start,(select Name from Cities z2 where z2.GUID=z1.Start) StartName,z1.Finish,(select Name from Cities z2 where z2.GUID=z1.Finish) FinishName,z1.Distance from Caravans z1 where PGUID=?");
+            query=con.prepareStatement("select z1.GUID,z2.Lat,z2.Lng,z1.Start,(select Name from Cities z2 where z2.GUID=z1.Start) StartName,(select Lat from GameObjects where GUID=z1.Start) as LatS,(select Lng from GameObjects where GUID=z1.Start) as LngS,z1.Finish,(select Name from Cities z2 where z2.GUID=z1.Finish) FinishName,(select Lat from GameObjects where GUID=z1.Finish) as LatF,(select Lng from GameObjects where GUID=z1.Finish) as LngF,z1.Distance, z1.profit from Caravans z1 left join GameObjects z2 on (z1.GUID=z2.GUID) where z1.PGUID=?");
+            query.setString(1, GUID);
+            rs = query.executeQuery();
+            while (rs.next()) {
+                JSONObject jobj = new JSONObject();
+                CarGUID=rs.getString("GUID");
+                StartGUID=rs.getString("Start");
+                StartName=rs.getString("StartName");
+                FinishGUID=rs.getString("Finish");
+                FinishName=rs.getString("FinishName");
+                Distance=rs.getInt("Distance");
+                profit=rs.getInt("profit");
+                LatS=rs.getInt("LatS");
+                LngS=rs.getInt("LngS");
+                LatF=rs.getInt("LatF");
+                LngF=rs.getInt("LngF");
+                jobj.put("GUID", CarGUID);
+                jobj.put("Lat",rs.getInt("Lat"));
+                jobj.put("Lng",rs.getInt("Lng"));
+                jobj.put("StartGUID", StartGUID);
+                jobj.put("StartName", StartName);
+                jobj.put("FinishGUID", FinishGUID);
+                jobj.put("FinishName", FinishName);
+                jobj.put("Distance", Distance);
+                jobj.put("profit", profit);
+                jobj.put("StartLat",LatS);
+                jobj.put("StartLng",LngS);
+                jobj.put("FinishLat",LatF);
+                jobj.put("FinishLng",LngF);
+                jarr2.add(jobj);
+            }
+            rs.close();
+            query.close();
+            jresult.put("Routes",jarr2);
+            jresult.put("Result", "OK");
+        }
+     catch (SQLException e) {
+        jresult.put("Result","DB001");
+        jresult.put("Message","Ошибка обращения к БД");
+    }
+        MyUtils.Logwrite("GetRoutes","Finished by "+Name, r.freeMemory());
+        return jresult.toString();
+    }
+//****************************************
     public String GetPlayerInfo() {
         MyUtils.Logwrite("GetPlayerInfo","Started by "+Name, r.freeMemory());
         int TNL, Caravans,Ambushes,AmbushesMax,AmbushesLeft,UpLevel,Distance,AmbLat,AmbLng,AmbushRadius,ActionDistance,LatS,LngS,LatF,LngF,UpCost,UpReqCityLevel, profit,foundedCities;
@@ -1795,6 +1857,9 @@ public class Player {
                 break;
             case "GetPlayerInfo":
                 result = GetPlayerInfo();
+                break;
+            case "GetRoutes":
+                result = GetRoutes();
                 break;
             case "GetMessage":
                 result=GetMessage();
