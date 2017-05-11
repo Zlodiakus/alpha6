@@ -41,6 +41,10 @@ public class MyUtils {
 				Math.sin(lat1 / 1e6 * Math.PI / 180) * Math.sin(lat2 / 1e6 * Math.PI / 180)));
 	}
 
+	public static boolean isBetween(int x, int lower, int upper) {
+		return lower <= x && x <= upper;
+	}
+
 	public static boolean checkVersion(int vers)
 	{
 		Connection con;

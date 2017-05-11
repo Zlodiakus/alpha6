@@ -14,8 +14,11 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.UUID;
+import main.MyUtils;
 
 import static java.lang.System.in;
+import static main.MyUtils.Logwrite;
+import static main.MyUtils.isBetween;
 
 
 /**
@@ -36,6 +39,8 @@ public class Player {
     int Hirelings;
     int HirelingsInAmbushes;
     boolean tower;
+    int maxQuantity=0;
+    int currentQuantity=0;
     JSONObject jresult = new JSONObject();
     JSONArray jarr = new JSONArray();
     String result = "";
@@ -1824,7 +1829,7 @@ public class Player {
     }
 
 
-    public String sendData(String ReqName, String TGUID, int TLAT, int TLNG, int RACE, int AMOUNT, String text, String ItemType, int Quantity) {
+    public String sendData(String ReqName, String TGUID, int TLAT, int TLNG, int RACE, int AMOUNT, String text, String ItemType, int Quantity, String resType) {
         //MyUtils.Logwrite("sendData","дошли");
         String result;
         switch (ReqName) {
@@ -1896,6 +1901,12 @@ public class Player {
                 break;
             case "PutItems":
                 result=putItemsTower(TGUID,ItemType,Quantity);
+                break;
+            case "Survey":
+                result=survey(TLAT,TLNG,resType);
+                break;
+            case "Extract":
+                result=extract(TLAT,TLNG,resType);
                 break;
 
             default:
@@ -2243,4 +2254,122 @@ public class Player {
     }
 //End of Ex-Client
 
+    private void countSurvey(int TLAT, int TLNG, String restype)
+    {
+        int scaleLat, scaleLng;
+        int quantity=1000;
+        double extractKoef=0.1;
+        //будем оперировать участками по 100 lat-lng, работаем с округленными значениями:
+        int tlat=100*(TLAT/100);
+        int tlng=100*(TLNG/100);
+        switch (restype) {
+            case "trees":
+                scaleLat=1000;
+                scaleLng=2000;
+                maxQuantity=(int)(quantity*Math.min(Math.max(0,Math.cos((double)tlat/scaleLat)),Math.max(0,Math.cos((double)tlng/scaleLng))));
+                break;
+            case "fields":
+                scaleLat=2000;
+                scaleLng=2000;
+                maxQuantity=(int)(quantity*Math.min(Math.max(0,Math.sin((double)tlat/scaleLat)),Math.max(0,Math.cos((double)tlng/scaleLng))));
+                break;
+            case "hills":
+                scaleLat=2000;
+                scaleLng=1000;
+                maxQuantity=(int)(quantity*Math.min(Math.max(0,Math.cos((double)tlat/scaleLat)),Math.max(0,Math.sin((double)tlng/scaleLng))));
+                break;
+        }
+
+        //вычитываваем раскопки в радиусе из базы, уменьшаем доход (возвращаем два значения, максимум и текущий
+
+        int deltaLat=4491; //2km
+        int deltaLng=(int)(deltaLat/Math.cos((TLAT / 1e6) * Math.PI / 180));
+
+        try {
+            PreparedStatement query = con.prepareStatement("select count(1) from extraction where ? between lat - ? and lat + ? and ? between lng - ? and lng + ? and type=?");
+            query.setInt(1,tlat);
+            query.setInt(2,deltaLat);
+            query.setInt(3,deltaLat);
+            query.setInt(4, tlng);
+            query.setInt(5,deltaLng);
+            query.setInt(6,deltaLng);
+            query.setString(7,restype);
+            ResultSet rs = query.executeQuery();
+            rs.first();
+            int extracts=rs.getInt(1);
+            if (isBetween(extracts,0,4)) {extractKoef=1.0;}
+            else if (isBetween(extracts,5,9)) {extractKoef=0.9;}
+            else if (isBetween(extracts,10,14)) {extractKoef=0.8;}
+            else if (isBetween(extracts,15,19)) {extractKoef=0.7;}
+            else if (isBetween(extracts,20,24)) {extractKoef=0.6;}
+            else if (isBetween(extracts,25,29)) {extractKoef=0.5;}
+            else if (isBetween(extracts,30,34)) {extractKoef=0.4;}
+            else if (isBetween(extracts,35,39)) {extractKoef=0.3;}
+            else if (isBetween(extracts,40,49)) {extractKoef=0.2;}
+            else {extractKoef=0.1;}
+        }
+        catch (SQLException e) {Logwrite("countSurvey","SQL error: "+e.toString());maxQuantity=-1;}
+
+        currentQuantity=(int)(maxQuantity*extractKoef);
+    }
+
+    private boolean updateExtraction(int TLAT, int TLNG, String restype) {
+        try {
+            PreparedStatement query=con.prepareStatement("insert into extraction values(?,?,?,NOW())");
+            query.setInt(1,TLAT);
+            query.setInt(2,TLNG);
+            query.setString(3,restype);
+            return true;
+        }
+        catch (SQLException e) {Logwrite("updateExtraction","SQL error: "+e.toString());return false;}
+    }
+
+    private boolean updateSurveys(int TLAT, int TLNG, String restype) {
+        try {
+            PreparedStatement query=con.prepareStatement("insert into surveys values(?,?,?,?,?,?,NOW())");
+            query.setString(1, UUID.randomUUID().toString());
+            query.setInt(2,TLAT);
+            query.setInt(3,TLNG);
+            query.setString(4,restype);
+            query.setInt(5,maxQuantity);
+            query.setInt(6,currentQuantity);
+            return true;
+        }
+        catch (SQLException e) {Logwrite("updateSurveys","SQL error: "+e.toString());return false;}
+    }
+
+    private String survey(int TLAT, int TLNG, String restype) {
+        countSurvey(TLAT,TLNG,restype);
+        if (maxQuantity!=-1)
+        {
+            jresult.put("Result","OK");
+            jresult.put("resType",restype);
+            jresult.put("quantity",currentQuantity);
+            jresult.put("maxQuantity",maxQuantity);
+        }
+        else
+        {
+            jresult.put("Result","O1801");
+        }
+        return jresult.toString();
+    }
+
+    private String extract(int TLAT, int TLNG, String restype) {
+        countSurvey(TLAT,TLNG,restype);
+        if (maxQuantity!=-1 && updateExtraction(TLAT,TLNG,restype))
+        {
+            jresult.put("Result","OK");
+            jresult.put("resType",restype);
+            jresult.put("quantity",currentQuantity);
+        }
+        else
+        {
+            jresult.put("Result","O1901");
+        }
+        return jresult.toString();
+    }
+
+
+
 }
+

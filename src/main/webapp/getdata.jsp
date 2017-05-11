@@ -28,6 +28,9 @@ String QuantityS=request.getParameter("Quantity");
 if (QuantityS == null) QuantityS="0";
 int Quantity=Integer.parseInt(QuantityS);
 
+String resType=request.getParameter("resType");
+if (resType == null) resType="";
+
 int PLAT=Integer.parseInt(PLatS);
 int PLNG=Integer.parseInt(PLngS);
 int LAT=Integer.parseInt(LatS);
@@ -41,7 +44,7 @@ int AMOUNT=Integer.parseInt(AMOUNTS);
 //check=false;
 if (check) {
 Player player=new Player(token, PLAT, PLNG);
-result = player.sendData(ReqName,TGUID,LAT,LNG,RACE,AMOUNT,text,ItemType,Quantity);
+result = player.sendData(ReqName,TGUID,LAT,LNG,RACE,AMOUNT,text,ItemType,Quantity,resType);
 }
 else {
 result="Check parameters";
