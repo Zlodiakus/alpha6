@@ -2319,6 +2319,8 @@ public class Player {
             query.setInt(1,TLAT);
             query.setInt(2,TLNG);
             query.setString(3,restype);
+            query.execute();
+            con.commit();
             return true;
         }
         catch (SQLException e) {Logwrite("updateExtraction","SQL error: "+e.toString());return false;}
@@ -2333,6 +2335,8 @@ public class Player {
             query.setString(4,restype);
             query.setInt(5,maxQuantity);
             query.setInt(6,currentQuantity);
+            query.execute();
+            con.commit();
             return true;
         }
         catch (SQLException e) {Logwrite("updateSurveys","SQL error: "+e.toString());return false;}
