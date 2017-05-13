@@ -2327,14 +2327,21 @@ public class Player {
     }
 
     private boolean updateSurveys(int TLAT, int TLNG, String restype) {
+        String SGUID=UUID.randomUUID().toString();
         try {
-            PreparedStatement query=con.prepareStatement("insert into surveys values(?,?,?,?,?,?,NOW())");
-            query.setString(1, UUID.randomUUID().toString());
+            PreparedStatement query=con.prepareStatement("insert into surveys values(?,?,?,?,?,?,?,NOW())");
+            query.setString(1, SGUID);
+            query.setString(2, GUID);
+            query.setInt(3,TLAT);
+            query.setInt(4,TLNG);
+            query.setString(5,restype);
+            query.setInt(6,maxQuantity);
+            query.setInt(7,currentQuantity);
+            query.execute();
+            query=con.prepareStatement("insert into GameObjects values(?,?,?,'survey')");
+            query.setString(1, SGUID);
             query.setInt(2,TLAT);
             query.setInt(3,TLNG);
-            query.setString(4,restype);
-            query.setInt(5,maxQuantity);
-            query.setInt(6,currentQuantity);
             query.execute();
             con.commit();
             return true;
@@ -2347,6 +2354,7 @@ public class Player {
         if (maxQuantity!=-1)
         {
             jresult.put("Result","OK");
+            //все кроме Result OK временно для тестирования. остальная информация будет приходить после завершения сюрвея через гетМесседж
             jresult.put("resType",restype);
             jresult.put("quantity",currentQuantity);
             jresult.put("maxQuantity",maxQuantity);

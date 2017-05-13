@@ -17,11 +17,11 @@ import java.sql.SQLException;
 public class BackGround {
     @Schedule(hour="*", minute="*", second="0", persistent=false)
     public void WorldMove() throws SQLException, NamingException {
-        MyUtils.Logwrite("BackGround","Started");
+        MyUtils.Logwrite("BackGround.move","Started");
         World world = new World();
         world.moveFast();
         world.close();
-        MyUtils.Logwrite("BackGround","Finished");
+        MyUtils.Logwrite("BackGround.move","Finished");
     }
     @Schedule(hour="*", minute="0", second="10", persistent=false)
     public void WorldMoveHour() throws SQLException, NamingException {
@@ -79,5 +79,12 @@ public class BackGround {
         world.close();
         MyUtils.Logwrite("BackGround.improveBounty","Finished");
     }
-
+    @Schedule(hour="*", minute="*", second="30", persistent=false)
+    public void checkSurveysFinish() throws SQLException, NamingException {
+        MyUtils.Logwrite("BackGround.surveys","Started");
+        World world = new World();
+        world.checkSurveysFinish();
+        world.close();
+        MyUtils.Logwrite("BackGround.surveys","Finished");
+    }
 }

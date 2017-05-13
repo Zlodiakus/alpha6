@@ -1,5 +1,7 @@
 package main;
 
+import org.json.simple.JSONObject;
+
 import javax.naming.NamingException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -73,7 +75,6 @@ public World() throws SQLException {
         }
         MyUtils.Logwrite("World.tickAmbushes", "Finish");
     }
-
 
     private void moveAllCaravans() {
         PreparedStatement query;
@@ -303,8 +304,6 @@ public World() throws SQLException {
         MyUtils.Logwrite("World.removeOldChests", "Finish");
     }
 
-
-
     public void improveBounty() {
         PreparedStatement query;
         try {
@@ -443,5 +442,45 @@ public World() throws SQLException {
             return "World created! \n"+ret;
         } catch (SQLException |NamingException e) {return "Dark Force prevents to create this world. "+e.toString()+"\n"+ret;}
         */
+    }
+
+    public void checkSurveysFinish() {
+        PreparedStatement query;
+        ResultSet rs;
+        //JSONObject jresult = new JSONObject();
+        String messageText;
+        String resType;
+        try {
+            query = con.prepareStatement("select PGUID, lat, lng, type, maxQuantity, currentQuantity from surveys where not done and created<NOW-5/1440");
+            rs = query.executeQuery();
+            //похерим ли тут отправку сообщения, если между вычиткой и апдейтов будет зазор. надежнее (но медленнее) апедейтить по одной строчке в выборке
+            query = con.prepareStatement("update surveys set done=true where not done and created<NOW-5/1440");
+            query.execute();
+            if (rs.isBeforeFirst()) {
+                while (rs.next()) {
+                    switch (rs.getString("type")) {
+                        case "trees":
+                            resType="Дерево";
+                            break;
+                        case "hills":
+                            resType="Камень";
+                            break;
+                        case "fields":
+                            resType="Зерно";
+                            break;
+                        default:
+                            resType="ресурс не определен";
+                    }
+                    //jresult.put("maxQuantity",rs.getInt("maxQuantity"));
+                    //jresult.put("currentQuantity",rs.getInt("currentQuantity"));
+                    messageText="Ваши геологи завершили исследование местности!\nРесурс: "+resType+".\nМаксимальное количество: "+rs.getInt("maxQuantity")+".\nТекущее количество:"+rs.getInt("currentQuantity")+".";
+                    MyUtils.Message(rs.getString("PGUID"),messageText,5,0,rs.getInt("lat"),rs.getInt("lng"));
+                }
+            }
+
+            query.close();
+            con.commit();
+        }
+        catch (SQLException e) {MyUtils.Logwrite("World.improveBounty", "SQL Error: " + e.toString());}
     }
 }
