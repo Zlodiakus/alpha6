@@ -2320,7 +2320,7 @@ public class Player {
             query.setInt(2,TLNG);
             query.setString(3,restype);
             query.execute();
-            con.commit();
+            //con.commit();
             return true;
         }
         catch (SQLException e) {Logwrite("updateExtraction","SQL error: "+e.toString());return false;}
@@ -2368,20 +2368,67 @@ public class Player {
 
     private String extract(int TLAT, int TLNG, String restype) {
         countSurvey(TLAT,TLNG,restype);
-        if (maxQuantity!=-1 && updateExtraction(TLAT,TLNG,restype))
-        {
-            jresult.put("Result","OK");
-            jresult.put("resType",restype);
-            jresult.put("quantity",currentQuantity);
+        try {
+            if (maxQuantity != -1 && updateExtraction(TLAT, TLNG, restype) && addResource(restype, currentQuantity) ) {
+                con.commit();
+                jresult.put("Result", "OK");
+                jresult.put("resType", restype);
+                jresult.put("quantity", currentQuantity);
+            } else {
+                con.rollback();
+                jresult.put("Result", "O1901");
+            }
         }
-        else
-        {
-            jresult.put("Result","O1901");
-        }
+        catch (SQLException e) {Logwrite("extract","SQL error: "+e.toString());jresult.put("Result", "O1901");}
         return jresult.toString();
     }
 
+    public boolean addResource(String type, int quantity) {
+        try {
+            PreparedStatement query=con.prepareStatement("update resources set quantity=quantity+? where PGUID=? and type=?");
+            query.setInt(1,quantity);
+            query.setString(2, GUID);
+            query.setString(3,type);
+            query.execute();
+            //con.commit();
+            return true;
+        }
+        catch (SQLException e) {Logwrite("addResources","SQL error: "+e.toString());return false;}
+    }
 
+    public boolean writeResource(String type, int quantity) {
+        try {
+            PreparedStatement query=con.prepareStatement("update resources set quantity=? where PGUID=? and type=?");
+            query.setInt(1,quantity);
+            query.setString(2, GUID);
+            query.setString(3,type);
+            query.execute();
+            //con.commit();
+            return true;
+        }
+        catch (SQLException e) {Logwrite("writeResources","SQL error: "+e.toString());return false;}
+    }
+
+    public int readResource(String type) {
+        try {
+            PreparedStatement query=con.prepareStatement("select quantity from resources where PGUID=? and type=?");
+            query.setString(1, GUID);
+            query.setString(2,type);
+            ResultSet rs=query.executeQuery();
+            if (rs.isBeforeFirst()) {
+                rs.first();
+                return rs.getInt(1);
+            }
+        }
+        catch (SQLException e) {Logwrite("readResources","SQL error: "+e.toString());}
+        return 0;
+    }
+
+    public boolean payResources(String type, int quantity) {
+        int curRes = readResource(type);
+        if (curRes>=quantity) {writeResource(type,curRes-quantity); return true;}
+        else return false;
+    }
 
 }
 

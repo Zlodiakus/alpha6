@@ -79,12 +79,23 @@ public class BackGround {
         world.close();
         MyUtils.Logwrite("BackGround.improveBounty","Finished");
     }
+
     @Schedule(hour="*", minute="*", second="30", persistent=false)
     public void checkSurveysFinish() throws SQLException, NamingException {
-        MyUtils.Logwrite("BackGround.surveys","Started");
+        MyUtils.Logwrite("BackGround.checkSurveys","Started");
         World world = new World();
         world.checkSurveysFinish();
         world.close();
-        MyUtils.Logwrite("BackGround.surveys","Finished");
+        MyUtils.Logwrite("BackGround.checkSurveys","Finished");
     }
+
+    @Schedule(hour="*", minute="1", second="33", persistent=false)
+    public void deleteOldSurveys() throws SQLException, NamingException {
+        MyUtils.Logwrite("BackGround.deleteSurveys","Started");
+        World world = new World();
+        world.deleteOldSurveys();
+        world.close();
+        MyUtils.Logwrite("BackGround.deleteSurveys","Finished");
+    }
+
 }

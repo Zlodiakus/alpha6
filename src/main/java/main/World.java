@@ -483,4 +483,13 @@ public World() throws SQLException {
         }
         catch (SQLException e) {MyUtils.Logwrite("World.improveBounty", "SQL Error: " + e.toString());}
     }
+
+    public void deleteOldSurveys() {
+        try {
+            PreparedStatement query = con.prepareStatement("delete from surveys where created<NOW()-3");
+            query.execute();
+            con.commit();
+        }
+        catch (SQLException e) {MyUtils.Logwrite("World.deleteOldSurveys","SQL Error:"+e.toString());}
+    }
 }
