@@ -322,7 +322,7 @@ public class Player {
         } catch (SQLException e) { MyUtils.Logwrite("Player.generateStartUpgrades","Error: "+e.toString());return false; }
     }
 
-
+/* Переходим к "награде за действия", разделяем опыт и деньги
     public void getGold(int GOLD) {
         Exp += GOLD;
         Gold += GOLD;
@@ -333,10 +333,27 @@ public class Player {
         //Fraction fraction = new Fraction(Race,con);
         //fraction.getGold(GOLD,con);
     }
+*/
 
+
+/* Неактуально, будет использоваться getResource("obsidian",quantity)
     public void getObsidian(int OBSIDIAN) {
+
         Obsidian += OBSIDIAN;
         update();
+    }
+*/
+
+    public void getGold(int GOLD) {
+        addResource("gold",GOLD);
+//временная затычка, коммит должен быть не здесь, потом надо будет определить
+        try {
+            con.commit();
+        }
+        catch (SQLException e)
+        {
+            //ЖОПА
+        }
     }
 
     private boolean checkForLevel() {
@@ -1941,9 +1958,10 @@ public class Player {
                         jresult.put("Gold", chest.bonus);
                         break;
                     case "obsidian":
-                        getObsidian(chest.bonus);
-                        addStat("obsidianed", chest.bonus);
-                        jresult.put("Obsidian", chest.bonus);
+                       //сюда не должны попадать
+                        // getObsidian(chest.bonus);
+                       // addStat("obsidianed", chest.bonus);
+                       // jresult.put("Obsidian", chest.bonus);
                         break;
                     default:
                         jresult.put("Result", "O1401");
@@ -1963,6 +1981,7 @@ public class Player {
         return jresult.toString();
     }
 
+//Переделать тут всё
     private String setTower(int TLAT, int TLNG) {
         MyUtils.Logwrite("setTower","Started by "+Name, r.freeMemory());
         if (tower) {
@@ -1978,7 +1997,7 @@ public class Player {
                     Tower tower = new Tower(con);
                     if (tower.set(GUID, Name, TLAT, TLNG)) {
                         jresult.put("Result", "OK");
-                        getObsidian(-5);
+                        //getObsidian(-5);
                     } else {
                         jresult.put("Result", "DB001");
                         jresult.put("Message", "Ошибка обращения к БД");

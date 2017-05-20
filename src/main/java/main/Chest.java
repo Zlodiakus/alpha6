@@ -35,7 +35,7 @@ public class Chest {
         LAT=a[0];
         LNG=a[1];
 
-        if (Math.random()*100<=1) {
+        if (Math.random()*100<0) { //исключили вариант с обсидианом
             chestBonus=1;
             chestType="obsidian";
         }
