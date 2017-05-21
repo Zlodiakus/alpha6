@@ -459,13 +459,13 @@ public World() throws SQLException {
             if (rs.isBeforeFirst()) {
                 while (rs.next()) {
                     switch (rs.getString("type")) {
-                        case "trees":
+                        case "wood":
                             resType="Дерево";
                             break;
-                        case "hills":
+                        case "stone":
                             resType="Камень";
                             break;
-                        case "fields":
+                        case "grain":
                             resType="Зерно";
                             break;
                         default:

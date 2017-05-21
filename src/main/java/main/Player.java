@@ -237,12 +237,18 @@ public class Player {
             query.setString(1,GUID);
             query.execute();
             query.close();
-            generateStartUpgrades();
-            con.commit();
+            if (generateStartUpgrades() && generateStartResources()) {
+                con.commit();
+                return Login + " успешно зарегистрирован!";}
+            else {con.rollback(); return Login + ", при регистрации возникли проблемы! Повторите попытку или обратитесь к администратору.";}
 
-            return Login + " succesfully registered!";
+
         } catch (SQLException e)
         {
+            try {con.rollback();}
+            catch (SQLException e1) {
+                //какие-то траблы с базой, хз, ничего не делаем
+            }
             return "SQL Error while registration: "+e.toString();
         }
 
@@ -302,9 +308,18 @@ public class Player {
         return ret;
     }
 
+    public boolean generateStartResources() {
+        PreparedStatement query;
+        try {
+            query = con.prepareStatement("insert into resources(PGUID,type,quantity) (select ?,type,0 from resourceTypes)");
+            query.setString(1,GUID);
+            query.execute();
+            return true;
+        } catch (SQLException e) { MyUtils.Logwrite("Player.generateStartResources","Error: "+e.toString());return false;}
+    }
 
     public boolean generateStartUpgrades() {
-        PreparedStatement query, query2, query3;
+        PreparedStatement query;
         String UGUID;
         try {
             query = con.prepareStatement("select GUID from Upgrades WHERE level=0");
@@ -2282,17 +2297,17 @@ public class Player {
         int tlat=100*(TLAT/100);
         int tlng=100*(TLNG/100);
         switch (restype) {
-            case "trees":
+            case "wood":
                 scaleLat=1000;
                 scaleLng=2000;
                 maxQuantity=(int)(quantity*Math.min(Math.max(0,Math.cos((double)tlat/scaleLat)),Math.max(0,Math.cos((double)tlng/scaleLng))));
                 break;
-            case "fields":
+            case "grain":
                 scaleLat=2000;
                 scaleLng=2000;
                 maxQuantity=(int)(quantity*Math.min(Math.max(0,Math.sin((double)tlat/scaleLat)),Math.max(0,Math.cos((double)tlng/scaleLng))));
                 break;
-            case "hills":
+            case "stone":
                 scaleLat=2000;
                 scaleLng=1000;
                 maxQuantity=(int)(quantity*Math.min(Math.max(0,Math.cos((double)tlat/scaleLat)),Math.max(0,Math.sin((double)tlng/scaleLng))));
@@ -2362,7 +2377,6 @@ public class Player {
             query.setInt(2,TLAT);
             query.setInt(3,TLNG);
             query.execute();
-            con.commit();
             return true;
         }
         catch (SQLException e) {Logwrite("updateSurveys","SQL error: "+e.toString());return false;}
@@ -2370,35 +2384,37 @@ public class Player {
 
     private String survey(int TLAT, int TLNG, String restype) {
         countSurvey(TLAT,TLNG,restype);
-        if (maxQuantity!=-1)
-        {
-            jresult.put("Result","OK");
-            //все кроме Result OK временно для тестирования. остальная информация будет приходить после завершения сюрвея через гетМесседж
-            jresult.put("resType",restype);
-            jresult.put("quantity",currentQuantity);
-            jresult.put("maxQuantity",maxQuantity);
+        try {
+            if (maxQuantity != -1 && payResources("hirelings", 10) && updateSurveys(TLAT, TLNG, restype)) {
+                con.commit();
+                jresult.put("Result", "OK");
+                //все кроме Result OK временно для тестирования. остальная информация будет приходить после завершения сюрвея через гетМесседж
+                //jresult.put("resType",restype);
+                jresult.put("quantity", currentQuantity);
+                jresult.put("maxQuantity", maxQuantity);
+            } else {
+                con.rollback();
+                jresult.put("Result", "DB001");
+            }
         }
-        else
-        {
-            jresult.put("Result","O1801");
-        }
+        catch (SQLException e) {Logwrite("survey","SQL error: "+e.toString());jresult.put("Result", "DB001");}
         return jresult.toString();
     }
 
     private String extract(int TLAT, int TLNG, String restype) {
         countSurvey(TLAT,TLNG,restype);
         try {
-            if (maxQuantity != -1 && updateExtraction(TLAT, TLNG, restype) && addResource(restype, currentQuantity) ) {
+            if (maxQuantity != -1 && updateExtraction(TLAT, TLNG, restype) && addResource(restype, currentQuantity) && payResources("hirelings",100) ) {
                 con.commit();
                 jresult.put("Result", "OK");
-                jresult.put("resType", restype);
+                //jresult.put("resType", restype);
                 jresult.put("quantity", currentQuantity);
             } else {
                 con.rollback();
-                jresult.put("Result", "O1901");
+                jresult.put("Result", "DB001");
             }
         }
-        catch (SQLException e) {Logwrite("extract","SQL error: "+e.toString());jresult.put("Result", "O1901");}
+        catch (SQLException e) {Logwrite("extract","SQL error: "+e.toString());jresult.put("Result", "DB001");}
         return jresult.toString();
     }
 
