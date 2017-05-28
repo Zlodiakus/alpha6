@@ -2465,5 +2465,64 @@ public class Player {
         else return false;
     }
 
+    public String castSpell(String name) {
+        try {
+            if (hasSpell(name) && canCast(name) && setEffects(name)) {
+                con.commit();
+                jresult.put("Result", "OK");
+            } else {
+                con.rollback();
+                jresult.put("Result", result);
+            }
+        }
+        catch (SQLException e) {jresult.put("Result","DB0001");Logwrite("Player.castSpell","SQL Error: "+e.toString());}
+        return jresult.toString();
+    }
+
+    private boolean hasSpell(String name) {
+        try {
+            PreparedStatement query = con.prepareStatement("select 1 from Pinv where type='spell' and id=?");
+            query.setString(1, name);
+            ResultSet rs = query.executeQuery();
+            if (rs.isBeforeFirst()) return true;
+            else return false;
+        }
+        catch (SQLException e) {result="DB001";Logwrite("Player.hasSpell","SQL Error: "+e.toString());return false;}
+    }
+
+    private boolean canCast(String name) {
+        try {
+            PreparedStatement query = con.prepareStatement("select reqtype, value from requirements where type='spell' and id=?");
+            query.setString(1, name);
+            ResultSet rs = query.executeQuery();
+            if (!rs.isBeforeFirst()) {return true;}
+            else {
+                while (rs.next()) {
+                    //тут надо сравнить требования с тем, что у игрока есть}
+                }
+                return false;
+            }
+        }
+        catch (SQLException e) {result="DB001";Logwrite("Player.canCast","SQL Error: "+e.toString());return false;}
+    }
+
+    private boolean setEffects(String name) {
+        /* тут надо проверить, что такие эффекты еще не висят. если висят, то апдейтнуть, если нет, то инсертнуть
+        try {
+
+            PreparedStatement query = con.prepareStatement("select effect, value, time from effects where type='spell' and id=?");
+            query.setString(1, name);
+            ResultSet rs = query.executeQuery();
+            if (rs.isBeforeFirst()) return true;
+            else return false;
+
+        }
+        catch (SQLException e) {result="DB001";Logwrite("Player.hasSpell","SQL Error: "+e.toString());return false;}
+        */
+        return false;
+    }
+
+
+
 }
 
