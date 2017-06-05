@@ -2507,6 +2507,19 @@ public class Player {
     }
 
     private boolean setEffects(String name) {
+        boolean successFlag=false;
+        switch (name) {
+            case "concentration":
+            case "speed":
+            case "defence":
+            case "pillage":
+            case "eagleeye":
+            case "longhands":
+                if (checkBuffsOn(name)) {successFlag=updateBuff(name);}
+                else {successFlag=insertBuff(name);}
+
+
+        }
         /* тут надо проверить, что такие эффекты еще не висят. если висят, то апдейтнуть, если нет, то инсертнуть
         try {
 
@@ -2522,7 +2535,40 @@ public class Player {
         return false;
     }
 
+    private boolean checkBuffsOn(String name)
+    {
+        try{
+            PreparedStatement query=con.prepareStatement("select 1 from effectsOn where PGUID=? and id=? and type='spell'");
+            query.setString(1,GUID);
+            query.setString(2,name);
+            ResultSet rs=query.executeQuery();
+            if (rs.isBeforeFirst()) {return true;}
+            else {return false;}
+        }
+        catch (SQLException e) {Logwrite("Player.checkBuffsOn","SQL Error: "+e.toString());return false;}
+    }
 
+    private boolean updateBuff(String name) {
+        try {
+            PreparedStatement query = con.prepareStatement("update effectsOn z1, effects z2 set z1.finishTime=NOW()+z2.time where z1.id= ? and z2.id=? and z2.type=z1.type");
+            query.setString(1,name);
+            query.execute();
+        }
+        catch (SQLException e) {Logwrite("Player.updateBuff","SQL Error: "+e.toString());return false;}
+        return false;
+    }
 
+    private boolean insertBuff(String name) {
+        try {
+            PreparedStatement query = con.prepareStatement("insert into effectsOn (PGUID, id, type, finishTime) VALUES (?,?,'spell', (select NOW()+time/1440 from effects where id=? and type='spell'))");
+            query.setString(1,GUID);
+            query.setString(2,name);
+            query.setString(3,name);
+            query.execute();
+        }
+        catch (SQLException e) {Logwrite("Player.insertBuff","SQL Error: "+e.toString());return false;}
+        return false;
+
+    }
 }
 
