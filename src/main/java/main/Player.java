@@ -41,6 +41,9 @@ public class Player {
     boolean tower;
     int maxQuantity=0;
     int currentQuantity=0;
+    int manaRegen=80;
+    int maxMana=2500;
+    boolean flagLevelChanged=false;
     JSONObject jresult = new JSONObject();
     JSONArray jarr = new JSONArray();
     String result = "";
@@ -371,6 +374,15 @@ public class Player {
         }
     }
 
+    public void getExp(int EXP) {
+        Exp+=EXP;
+        if (checkForLevel()) {
+            Level += 1;
+            flagLevelChanged=true;
+        }
+    }
+
+
     private boolean checkForLevel() {
         if (Level<20) return (Exp>=getTNL());
         else return false;
@@ -380,13 +392,12 @@ public class Player {
     public void update() {
         PreparedStatement query;
         try {
-            query = con.prepareStatement("update Players set Level=?, Exp=?, Gold=?, Race=?, Hirelings=?, Obsidian=? where GUID=?");
+            query = con.prepareStatement("update Players set Level=?, Exp=?, Race=?, manaRegen=?, maxMana=? where GUID=?");
             query.setInt(1,Level);
             query.setInt(2,Exp);
-            query.setInt(3,Gold);
-            query.setInt(4,Race);
-            query.setInt(5,Hirelings);
-            query.setInt(6,Obsidian);
+            query.setInt(3,Race);
+            query.setInt(4,manaRegen);
+            query.setInt(5,maxMana);
             query.setString(7,GUID);
             query.execute();
             con.commit();
@@ -1325,17 +1336,18 @@ public class Player {
         MyUtils.Logwrite("DestroyAmbush", "Started by " + Name, r.freeMemory());
         String res;
         int bonus;
+        int actionExp, actionGold;
         JSONObject jobj = new JSONObject();
         Ambush ambush = new Ambush(TGUID, con);
         if (ambush.Race == Race) {
             jresult.put("Result", "O0303");
-            jresult.put("Message", "Нельзя уничтожать засады своей фракции!");
+            //jresult.put("Message", "Нельзя уничтожать засады своей фракции!");
             res = jresult.toString();
         } else {
             if (MyUtils.RangeCheck(ambush.Lat, ambush.Lng, Lat, Lng) <= getRadius()) {
                 if (Hirelings < 5 * ambush.Life) {
                     jresult.put("Result", "O0304");
-                    jresult.put("Message", "Вам не хватает наемников для уничтожения засады!");
+                    //jresult.put("Message", "Вам не хватает наемников для уничтожения засады!");
                     res = jresult.toString();
                 } else {
                     res = ambush.Destroy(TGUID, con);
@@ -1344,9 +1356,16 @@ public class Player {
                         //bonus = 10 + getPlayerUpgradeEffect2("paladin");
                         bonus = (int) (((20 + Math.min(720, ambush.TTS + 180) * ambush.Life) * getPlayerUpgradeEffect2("paladin") * (1+(float)(getPlayerUpgradeEffect2("bargain")/100)))*(100+getBounty()) / 2000);
                         if (ambush.PGUID.equals("Elf")) bonus+=1000;
-                        jobj.put("Message", "Награда за уничтожение засады составила " + Integer.toString(bonus) + " золота!");
-                        Hirelings -= 5 * ambush.Life; //апдейт в гетГолде пройдет
-                        getGold(bonus);
+                        //jobj.put("Message", "Награда за уничтожение засады составила " + Integer.toString(bonus) + " золота!");
+                        actionGold=bonus;
+                        actionExp=2*bonus;
+                        jobj.put("Exp",actionExp);
+                        jobj.put("Gold",actionGold);
+                        //Hirelings -= 5 * ambush.Life; //апдейт в гетГолде пройдет
+                        payResources("Hirelings",5);
+                        getGold(actionGold);
+                        getExp(actionExp);
+                        //TODO переделать статистику
                         addStat("paladined", bonus);
                         addStat("Npaladins", 1);
                         MyUtils.Message(ambush.PGUID, "Ваша засада " + ambush.Name + " была уничтожена!", 2, 0, ambush.Lat, ambush.Lng);
@@ -1355,7 +1374,7 @@ public class Player {
                 }
             } else {
                 jresult.put("Result", "O0302");
-                jresult.put("Message", "Засада слишком далеко!");
+                //jresult.put("Message", "Засада слишком далеко!");
                 res = jresult.toString();
             }
         }
