@@ -80,7 +80,7 @@ public class Caravan {
         //int bonus=countBonus();
         Player player=new Player(PGUID,con);
         bonus=(int)(bonus*(float)(100+player.getPlayerUpgradeEffect2("bargain"))/100);
-        player.getGold(bonus);
+        player.getGold(1+bonus/10);
         City city = new City(Start,con);
         city.getGold(bonus,player.Race);
         city = new City(Finish,con);

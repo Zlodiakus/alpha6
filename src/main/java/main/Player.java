@@ -1365,6 +1365,8 @@ public class Player {
                         payResources("Hirelings",5);
                         getGold(actionGold);
                         getExp(actionExp);
+                        jobj.put("Level",Level);
+                        jobj.put("isLevelChanged",flagLevelChanged);
                         //TODO переделать статистику
                         addStat("paladined", bonus);
                         addStat("Npaladins", 1);
@@ -1510,6 +1512,8 @@ public class Player {
                                 jresult.put("Gold",actionGold);
                                 getGold(actionGold);
                                 getExp(actionExp);
+                                jresult.put("Level",Level);
+                                jresult.put("isLevelChanged",flagLevelChanged);
                                 update();
                                 //TODO Переделатть это убожество, надо нормально код отрефакторить
                                 commit(con);
@@ -1674,6 +1678,8 @@ public class Player {
                                     jresult.put("Gold",actionGold);
                                     getGold(actionGold);
                                     getExp(actionExp);
+                                    jresult.put("Level",Level);
+                                    jresult.put("isLevelChanged",flagLevelChanged);
                                     update();
                                     //TODO Переделатть это убожество, надо нормально код отрефакторить
                                     commit(con);
