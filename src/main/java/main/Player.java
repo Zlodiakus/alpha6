@@ -1448,7 +1448,15 @@ public class Player {
         return res;
     }
 
+    private void commit(Connection CON) {
+        try {
+            CON.commit();
+        }
+        catch (SQLException e) {Logwrite("commit", "SQL Error: "+e.toString());}
+    }
+
     public String FinishRoute(String TGUID) {
+        int actionGold,actionExp;
         MyUtils.Logwrite("FinishRoute","Started by "+Name, r.freeMemory());
         String res,SGUID;
         String checkUnfinishedRoute,RGUID;
@@ -1491,8 +1499,24 @@ public class Player {
                         if (Hirelings<cityS.Level+cityF.Level) {jresult.put("Result","O0606");jresult.put("Message","Недостаточно людей для запуска каравана. Нужно "+(cityS.Level+cityF.Level));res=jresult.toString();}
                         else {
                             Caravan caravan = new Caravan(con);
-                            res = caravan.FinishRoute(RGUID, TGUID, speed, accel, cargo, trade, con);
-                            if (res.contains("OK")) {Hirelings-=cityS.Level+cityF.Level;update();addStat("Ncaravans", 1);}
+                            jresult = caravan.FinishRoute(RGUID, TGUID, speed, accel, cargo, trade, con);
+                            if (jresult.toString().contains("OK")) {
+                                //Hirelings-=cityS.Level+cityF.Level;
+                                payResources("Hirelings",cityS.Level+cityF.Level);
+                                int bonus=10;
+                                actionGold=2*bonus;
+                                actionExp=5*bonus;
+                                jresult.put("Exp",actionExp);
+                                jresult.put("Gold",actionGold);
+                                getGold(actionGold);
+                                getExp(actionExp);
+                                update();
+                                //TODO Переделатть это убожество, надо нормально код отрефакторить
+                                commit(con);
+                                //TODO Переделать работу со статистикой
+                                addStat("Ncaravans", 1);
+                            }
+                            res=jresult.toString();
                         }
                     }
                     else {
@@ -1560,7 +1584,7 @@ public class Player {
                         }
                         City cityS=new City(SGUID,con);
 
-                        if (Hirelings<cityS.Level+cityF.Level) {jresult.put("Result","O0606");jresult.put("Message","Недостаточно людей для запуска каравана. Нужно "+(cityS.Level+cityF.Level));res=jresult.toString();flag=false;}
+                        if (!payResources("Hirelings",cityS.Level+cityF.Level)) {jresult.put("Result","O0606");jresult.put("Message","Недостаточно людей для запуска каравана. Нужно "+(cityS.Level+cityF.Level));res=jresult.toString();flag=false;}
                         else {
                             //Caravan caravan = new Caravan(con);
                             //res = caravan.FinishRoute(RGUID, TGUID, speed, accel, cargo, con);
@@ -1624,9 +1648,7 @@ public class Player {
                                     FRquery.setInt(4,FRprofit);
                                     FRquery.setString(5,RGUID);
                                     FRquery.execute();
-                                    con.commit();
-                                    addStat("Ncaravans", 1);
-
+                                    //con.commit();
                                     FRquery.close();
                                     restmp ="0";
                                     FRjobj.put("GUID", RGUID);
@@ -1643,7 +1665,20 @@ public class Player {
                                     FRjobj.put("FinishLat",FRLat);
                                     FRjobj.put("FinishLng",FRLng);
                                     FRjarr.add(FRjobj);
-                                    Hirelings-=cityS.Level+cityF.Level;update();flag=true;
+                                    //Hirelings-=cityS.Level+cityF.Level;update();
+                                    flag=true;
+                                    int bonus=10;
+                                    int actionGold=2*bonus;
+                                    int actionExp=5*bonus;
+                                    jresult.put("Exp",actionExp);
+                                    jresult.put("Gold",actionGold);
+                                    getGold(actionGold);
+                                    getExp(actionExp);
+                                    update();
+                                    //TODO Переделатть это убожество, надо нормально код отрефакторить
+                                    commit(con);
+                                    //TODO Переделать работу со статистикой
+                                    addStat("Ncaravans", 1);
 
                                 } catch (SQLException e) {MyUtils.Logwrite("Caravan.FinishStartRoute","finish"+e.toString());jresult.put("Result","BD001");jresult.put("Message","Ошибка обращения к БД"); /*return jresult.toString();*/}
                             //    return jresult.toString();

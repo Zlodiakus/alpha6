@@ -183,7 +183,7 @@ public class Caravan {
         return jresult.toString();
     }
 
-    public String FinishRoute(String RGUID, String CGUID, int speed, int accel, int cargo, int trade, Connection con) {
+    public JSONObject FinishRoute(String RGUID, String CGUID, int speed, int accel, int cargo, int trade, Connection con) {
         JSONObject jobj = new JSONObject();
         PreparedStatement query;
         int levelS,levelF;
@@ -204,7 +204,7 @@ public class Caravan {
             LngS=rs.getInt("Lng");
             Start=rs.getString("Start");
 
-            if ((LatS==Lat) && (LngS==Lng)) {jresult.put("Result","O0605");jresult.put("Message","Ваш маршрут начинается в этом городе, вы не можете завершить маршрут в нем!");return jresult.toString();}
+            if ((LatS==Lat) && (LngS==Lng)) {jresult.put("Result","O0605");jresult.put("Message","Ваш маршрут начинается в этом городе, вы не можете завершить маршрут в нем!");return jresult;}
             query=con.prepareStatement("insert into GameObjects (GUID,Lat,Lng,Type) values (?,?,?,'Caravan')");
             query.setString(1,RGUID);
             query.setInt(2,LatS);
@@ -243,7 +243,7 @@ public class Caravan {
             con.commit();
 //            rs.close();
             query.close();
-        } catch (SQLException e) {MyUtils.Logwrite("Caravan.FinishRoute",e.toString());jresult.put("Result","BD001");jresult.put("Message","Ошибка обращения к БД"); return jresult.toString();}
+        } catch (SQLException e) {MyUtils.Logwrite("Caravan.FinishRoute",e.toString());jresult.put("Result","BD001");jresult.put("Message","Ошибка обращения к БД"); return jresult;}
         jresult.put("Result","OK");
         jobj.put("GUID", RGUID);
         jobj.put("Lat",Lat);
@@ -259,7 +259,7 @@ public class Caravan {
         jobj.put("FinishLat",Lat);
         jobj.put("FinishLng",Lng);
         jresult.put("Route",jobj);
-        return jresult.toString();
+        return jresult;
     }
 
 /*
