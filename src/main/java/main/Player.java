@@ -692,6 +692,26 @@ public class Player {
         jresult.put("Obsidian",Obsidian);
         jresult.put("Race",Race);
         jresult.put("Hirelings",Hirelings);
+
+        int citiesFounded=foundedCities();
+        int goldToNextCity=Math.max(0,(citiesFounded-10)* 10000);
+        int obsidianToNextCity=Math.max(0,(citiesFounded-10));
+
+        JSONObject jobj;
+        JSONArray jarr;
+        jarr=new JSONArray();
+        jobj=new JSONObject();
+        jobj.put("Type","Gold");
+        jobj.put("Quantity",goldToNextCity);
+        jarr.add(jobj);
+
+        jobj=new JSONObject();
+        jobj.put("Type","Obsidian");
+        jobj.put("Quantity",obsidianToNextCity);
+        jarr.add(jobj);
+
+        jresult.put("nextCityCost",jarr);
+
         //Кривой код, потенциально могу тут передавать notower в GUID'е
         if (tower) jresult.put("Tower", getTowerGUID());
         //int LeftToHire=getPlayerUpgradeEffect1("leadership") - Hirelings - HirelingsInAmbushes;
@@ -737,7 +757,7 @@ public class Player {
             query.setString(1, GUID);
             rs = query.executeQuery();
             while (rs.next()) {
-                JSONObject jobj = new JSONObject();
+                jobj = new JSONObject();
                 UpType=rs.getString("Type");
                 UpName=rs.getString("Name");
                 UpDesc=rs.getString("Description");
@@ -757,7 +777,7 @@ public class Player {
             query.setString(1, GUID);
             rs = query.executeQuery();
             while (rs.next()) {
-                JSONObject jobj = new JSONObject();
+                jobj = new JSONObject();
                 UpType=rs.getString("Type");
                 UpName=rs.getString("Name");
                 UpDesc=rs.getString("Description");
@@ -783,7 +803,7 @@ public class Player {
             query.setString(1, GUID);
             rs = query.executeQuery();
             while (rs.next()) {
-                JSONObject jobj = new JSONObject();
+                jobj = new JSONObject();
                 CarGUID=rs.getString("GUID");
                 StartGUID=rs.getString("Start");
                 StartName=rs.getString("StartName");
@@ -818,7 +838,7 @@ public class Player {
             query.setString(1, GUID);
             rs = query.executeQuery();
             while (rs.next()) {
-                JSONObject jobj = new JSONObject();
+                jobj = new JSONObject();
                 AmbGUID=rs.getString("GUID");
                 AmbLat=rs.getInt("Lat");
                 AmbLng=rs.getInt("Lng");
@@ -2284,21 +2304,42 @@ public class Player {
         return CGUID;
     }
 
+    private int foundedCities() {
+        int founded;
+        try {
+            PreparedStatement query = con.prepareStatement("select count(1) from Cities where Creator=? and kvant=0");
+            query.setString(1, GUID);
+            ResultSet rs = query.executeQuery();
+            rs.first();
+            founded = rs.getInt(1);
+            rs.close();
+            query.close();
+        } catch (SQLException e) {
+            founded = 999999;
+        }
+        return founded;
+    }
+
     private String createCity(int TLAT, int TLNG) {
         String res, CGUID;
-        int mapper;
+        //int mapper;
         MyUtils.Logwrite("createCity","Started by "+Name, r.freeMemory());
         if (MyUtils.RangeCheck(Lat, Lng, TLAT, TLNG) <= getRadius()) {
-            if (CheckCitiesQuantity()) {
+            int citiesFounded=foundedCities();
+            int goldToNextCity=Math.max(0,(citiesFounded-10)* 10000);
+            int obsidianToNextCity=Math.max(0,(citiesFounded-10));
+            if (payResources("Gold",goldToNextCity) && payResources("Obsidian",obsidianToNextCity)) {
                 CGUID=UUID.randomUUID().toString();
                 City city = new City(CGUID, con);
-                mapper=getPlayerUpgradeEffect2("founder");
-                res = city.createCity(GUID, TLAT, TLNG, mapper);
+                //mapper=getPlayerUpgradeEffect2("founder");
+                res = city.createCity(GUID, TLAT, TLNG);
+                commit(con);
             } else {
                 jresult.put("Result","O1203");
-                jresult.put("Message", "Достигнут лимит основанных городов!");
+                jresult.put("Message", "Не хватает ресурсов для основания нового города!");
                 res=jresult.toString();
             }
+
         } else {
             jresult.put("Result","O1201");
             jresult.put("Message", "Слишком далеко!");

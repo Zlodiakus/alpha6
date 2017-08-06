@@ -345,5 +345,24 @@ public class MyUtils {
 		}
 	}
 
+	public static int getUpgradesQuantity() {
+		int result;
+		Connection con;
+		PreparedStatement query;
+		try {
+			con = DBUtils.ConnectDB();
+			query=con.prepareStatement("select count(1) from (select distinct Type from Upgrades)");
+			ResultSet rs=query.executeQuery();
+			rs.first();
+			result=rs.getInt(1);
+			query.close();
+			con.close();
+		} catch (SQLException | NamingException e) {
+			Logwrite("MyUtils.getUpgradesQuantity","SQL Error: "+e.toString());
+			result=0;
+		}
+		return result;
+	}
+
 
 }

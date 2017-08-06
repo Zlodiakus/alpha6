@@ -68,14 +68,14 @@ public class City {
         }
     }
 
-    private boolean canCreateCity(String PGUID, int LAT, int LNG, int mapper, Connection con) {
+    private boolean canCreateCity(String PGUID, int LAT, int LNG, Connection con) {
         //TODO use deltas instead of numbers
         PreparedStatement query;
         ResultSet rs;
         String CName, minName="в чистом поле";
         int TLat,TLng, TRadius, CLevel;
-        int minDist=125+mapper;
-        int minSelfDist=250+mapper;
+        int minDist=125;
+        int minSelfDist=250;
         boolean result=true;
         try {
             query = con.prepareStatement("select z2.Name,z1.Lat,z1.Lng,z2.Creator from GameObjects z1, Cities z2 where z2.GUID=z1.GUID and z1.Type='City' and z2.Creator=? and round(6378137 * acos(cos(z1.Lat / 1e6 * PI() / 180) * cos(? / 1e6 * PI() / 180) * cos(z1.Lng / 1e6 * PI() / 180 - ? / 1e6 * PI() / 180) + sin(z1.Lat / 1e6 * PI() / 180) * sin(? / 1e6 * PI() / 180)))<=?");
@@ -128,7 +128,7 @@ public class City {
         LAT = TLAT + delta_lat_rand;
         LNG = TLNG + delta_lng_rand;
 
-        if (canCreateCity(PGUID, LAT, LNG, 0, con)) {
+        if (canCreateCity(PGUID, LAT, LNG, con)) {
             try {
                 int i = 0;
                 Random random = new Random();
@@ -200,7 +200,7 @@ public class City {
         LAT=TLAT+delta_lat_rand;
         LNG=TLNG+delta_lng_rand;
 
-        if (canCreateCity(PGUID, LAT, LNG, 0, con)) {
+        if (canCreateCity(PGUID, LAT, LNG, con)) {
             try {
                 int i=0;
                 Random random=new Random();
@@ -252,20 +252,20 @@ public class City {
     }
 
 
-    public String createCity(String PGUID, int TLAT, int TLNG, int mapper) {
+    public String createCity(String PGUID, int TLAT, int TLNG) {
         PreparedStatement query;
         String CName, CUpgradeType,CUName;
         int LAT, LNG, r, dist;
         int randLat,randLng,maxRandLng;
         JSONObject jresult = new JSONObject();
         JSONObject jobj = new JSONObject();
-        if (canCreateCity(PGUID, TLAT, TLNG, mapper, con)) {
+        if (canCreateCity(PGUID, TLAT, TLNG, con)) {
             try {
 
                 int i=0;
                 Random random=new Random();
-                String [] upgrades = new String [7];
-                String [] upnames = new String [7];
+                String [] upgrades = new String [MyUtils.getUpgradesQuantity()];
+                String [] upnames = new String [MyUtils.getUpgradesQuantity()];
                     query=con.prepareStatement("select Type,Name from Upgrades where level=0");
                     ResultSet rs=query.executeQuery();
                     if (rs.isBeforeFirst()) {
@@ -293,23 +293,23 @@ public class City {
 
                 query = con.prepareStatement("INSERT INTO GameObjects(GUID,Lat,Lng,Type)VALUES(?,?,?,'City')");
                 query.setString(1, GUID);
-                randLat=(int)(Math.random()*2*mapper)-mapper;
-                maxRandLng=(int)Math.sqrt(mapper*mapper-randLat*randLat);
-                randLng=(int) (Math.random()*2*maxRandLng)-maxRandLng;
-                int delta_lat_rand=(int)(1000000*Math.asin((180/3.1415926)*(randLat)/(6378137)));
-                int delta_lng_rand=(int)(1000000*Math.asin((180/3.1415926)*(randLng)/(6378137*Math.cos((TLAT/1000000)*3.1415926/180))));
-                LAT=TLAT+delta_lat_rand;
-                LNG=TLNG+delta_lng_rand;
-                query.setInt(2, LAT);
-                query.setInt(3, LNG);
+                //randLat=(int)(Math.random()*2*mapper)-mapper;
+                //maxRandLng=(int)Math.sqrt(mapper*mapper-randLat*randLat);
+                //randLng=(int) (Math.random()*2*maxRandLng)-maxRandLng;
+                //int delta_lat_rand=(int)(1000000*Math.asin((180/3.1415926)*(randLat)/(6378137)));
+                //int delta_lng_rand=(int)(1000000*Math.asin((180/3.1415926)*(randLng)/(6378137*Math.cos((TLAT/1000000)*3.1415926/180))));
+                //LAT=TLAT+delta_lat_rand;
+                //LNG=TLNG+delta_lng_rand;
+                query.setInt(2, TLAT);
+                query.setInt(3, TLNG);
                 query.execute();
                 query.close();
                 con.commit();
                 jresult.put("Result", "OK");
                 jobj.put("GUID", GUID);
                 jobj.put("Type", "City");
-                jobj.put("Lat", LAT);
-                jobj.put("Lng", LNG);
+                jobj.put("Lat", TLAT);
+                jobj.put("Lng", TLNG);
                 jobj.put("Name", CName);
                 jobj.put("Level", 1);
                 jobj.put("Progress",0);
@@ -323,9 +323,9 @@ public class City {
                 jobj.put("Hirelings",100);
                 jobj.put("Creator",Name);
                 jresult.put("City",jobj);
-                dist=(int)MyUtils.RangeCheck(LAT,LNG,TLAT,TLNG);
-                jresult.put("Message","Город успешно основан в "+dist+" метрах от запланированного места");
-                createKvantCity(PGUID,LAT,LNG,CName);
+                //dist=(int)MyUtils.RangeCheck(LAT,LNG,TLAT,TLNG);
+                jresult.put("Message","Город успешно основан");
+                createKvantCity(PGUID,TLAT,TLNG,CName);
             } catch (SQLException e) {
                 jresult.put("Result","BD001");
                 jresult.put("Message", "Ошибка взаимодействия с базой данных при установке города.");
