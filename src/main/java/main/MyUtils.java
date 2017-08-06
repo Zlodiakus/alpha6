@@ -370,7 +370,7 @@ public class MyUtils {
 		PreparedStatement query;
 		try {
 			con = DBUtils.ConnectDB();
-			query=con.prepareStatement("select count(1) from (select distinct Type from Upgrades)");
+			query=con.prepareStatement("select count(1) from (select distinct Type from Upgrades) z1");
 			ResultSet rs=query.executeQuery();
 			rs.first();
 			result=rs.getInt(1);
