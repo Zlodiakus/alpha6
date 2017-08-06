@@ -252,7 +252,7 @@ public class City {
     }
 
 
-    public String createCity(String PGUID, int TLAT, int TLNG) {
+    public JSONObject createCity(String PGUID, int TLAT, int TLNG) {
         PreparedStatement query;
         String CName, CUpgradeType,CUName;
         int LAT, LNG, r, dist;
@@ -277,7 +277,7 @@ public class City {
                         query.close();
                         rs.close();
                     }
-                    else {query.close();rs.close(); jresult.put("Result","BD001");jresult.put("Message","Ошибка обращения к БД"); return jresult.toString();}
+                    else {query.close();rs.close(); jresult.put("Result","BD001");jresult.put("Message","Ошибка обращения к БД"); return jresult;}
 
                 query = con.prepareStatement("INSERT INTO Cities (GUID,Name,UpgradeType, Creator) VALUES(?,?,?,?)");
                 query.setString(1, GUID);
@@ -336,7 +336,7 @@ public class City {
             jresult.put("Result","O1202");
             jresult.put("Message", "Невозможно основать город здесь. Другой город слишком близко!");
         }
-        return jresult.toString();
+        return jresult;
     }
 
     public String getUpgradeType() {

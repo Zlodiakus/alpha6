@@ -2334,21 +2334,25 @@ public class Player {
                 CGUID=UUID.randomUUID().toString();
                 City city = new City(CGUID, con);
                 //mapper=getPlayerUpgradeEffect2("founder");
-                res = city.createCity(GUID, TLAT, TLNG);
+                jresult = city.createCity(GUID, TLAT, TLNG);
+                getExp(1000);
                 commit(con);
+                jresult.put("Exp",1000);
+                jresult.put("Level",Level);
+                jresult.put("isLevelChanged",flagLevelChanged);
             } else {
                 jresult.put("Result","O1203");
                 jresult.put("Message", "Не хватает ресурсов для основания нового города!");
-                res=jresult.toString();
+                //res=jresult.toString();
             }
 
         } else {
             jresult.put("Result","O1201");
             jresult.put("Message", "Слишком далеко!");
-            res=jresult.toString();
+            //res=jresult.toString();
         }
         MyUtils.Logwrite("createCity","Finished by "+Name, r.freeMemory());
-        return res;
+        return jresult.toString();
     }
 
     private String GetMessage() {
