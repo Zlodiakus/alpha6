@@ -451,10 +451,10 @@ public World() throws SQLException {
         String messageText;
         String resType;
         try {
-            query = con.prepareStatement("select PGUID, lat, lng, type, maxQuantity, currentQuantity from surveys where not done and created<NOW-5/1440");
+            query = con.prepareStatement("select PGUID, lat, lng, type, maxQuantity, currentQuantity from surveys where not done and created<NOW()-5/1440");
             rs = query.executeQuery();
             //похерим ли тут отправку сообщения, если между вычиткой и апдейтов будет зазор. надежнее (но медленнее) апедейтить по одной строчке в выборке
-            query = con.prepareStatement("update surveys set done=true where not done and created<NOW-5/1440");
+            query = con.prepareStatement("update surveys set done=true where not done and created<NOW()-5/1440");
             query.execute();
             if (rs.isBeforeFirst()) {
                 while (rs.next()) {
@@ -481,7 +481,7 @@ public World() throws SQLException {
             query.close();
             con.commit();
         }
-        catch (SQLException e) {MyUtils.Logwrite("World.improveBounty", "SQL Error: " + e.toString());}
+        catch (SQLException e) {MyUtils.Logwrite("World.checkSurveysFinish", "SQL Error: " + e.toString());}
     }
 
     public void deleteOldSurveys() {

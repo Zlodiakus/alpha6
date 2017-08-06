@@ -64,6 +64,7 @@ public class Portal {
 
 
     public JSONObject getInfo() {
+        Logwrite("Portal.getInfo","Start.");
         JSONObject jresult = new JSONObject();
         JSONArray jarr = new JSONArray();
         JSONObject jobj = new JSONObject();
@@ -81,6 +82,7 @@ public class Portal {
         jarr.add(jobj);
 
         jresult.put("portalNeed",jarr);
+        Logwrite("Portal.getInfo","Finish.");
         return jresult;
     }
 

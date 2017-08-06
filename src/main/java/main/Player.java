@@ -2014,6 +2014,7 @@ public class Player {
                 break;
             case "getPortalInfo":
                 result=getPortalInfo();
+                Logwrite("Player.getPortalInfo","Finish.");
                 break;
             case "portalDonate":
                 result=portalDonate(GOLD,OBSIDIAN);
@@ -2652,7 +2653,9 @@ public class Player {
     }
 
     private String getPortalInfo() {
+        Logwrite("Player.getPortalInfo","Start.");
         Portal portal = new Portal(Race, con);
+        Logwrite("Player.getPortalInfo","Загрузили данные портала.");
         return portal.getInfo().toString();
     }
 
