@@ -19,7 +19,7 @@ public class Portal {
         try{
             con=CON;
             Race=RACE;
-            PreparedStatement query=con.prepareStatement("select Gold, Obsidian, portalLevel from Fraction where Id=?");
+            PreparedStatement query=con.prepareStatement("select Gold, Obsidian, portalLevel from Fractions where Id=?");
             query.setInt(1,Race);
             ResultSet rs=query.executeQuery();
             rs.first();
@@ -106,7 +106,7 @@ public class Portal {
 
     private void save() {
         try{
-            PreparedStatement query=con.prepareStatement("update Fraction set Gold=?, Obsidian=?, portalLevel=? where Id=?");
+            PreparedStatement query=con.prepareStatement("update Fractions set Gold=?, Obsidian=?, portalLevel=? where Id=?");
             query.setInt(1,Gold);
             query.setInt(2,Obsidian);
             query.setInt(3,Level);
