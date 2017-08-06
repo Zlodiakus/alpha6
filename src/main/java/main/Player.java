@@ -243,6 +243,7 @@ public class Player {
             query.setString(2,Login);
             query.execute();
             writeResource("Gold",0);
+            writeResource("Hirelings",100);
             query=con.prepareStatement("insert into Stats (PGUID) values (?)");
             query.setString(1,GUID);
             query.execute();
@@ -408,7 +409,7 @@ public class Player {
             query.setInt(3,Race);
             query.setInt(4,manaRegen);
             query.setInt(5,maxMana);
-            query.setString(7,GUID);
+            query.setString(6,GUID);
             query.execute();
             con.commit();
             query.close();
