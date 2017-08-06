@@ -316,8 +316,8 @@ public World() throws SQLException {
     }
 
     public static String Destroy() {
-        return "Undestroyble";
-        /*PreparedStatement query;
+        //return "Undestroyble";
+        PreparedStatement query;
         try {
             Connection con = DBUtils.ConnectDB();
             query = con.prepareStatement("truncate table Players");
@@ -338,7 +338,7 @@ public World() throws SQLException {
             query.execute();
             query = con.prepareStatement("truncate table logs");
             query.execute();
-            query = con.prepareStatement("update Fractions set Gold=0");
+            query = con.prepareStatement("update Fractions set Gold=0, Obsidian=0, portalLevel=0");
             query.execute();
             query = con.prepareStatement("truncate table Stats");
             query.execute();
@@ -346,7 +346,7 @@ public World() throws SQLException {
             con.commit();
             con.close();
             return "World destroyed. MUHAHAHA!";
-        } catch (SQLException |NamingException e) {return "Oops, God protected this world with "+e.toString();}*/
+        } catch (SQLException |NamingException e) {return "Oops, God protected this world with "+e.toString();}
     }
 
     public static String Create() {

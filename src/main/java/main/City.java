@@ -132,7 +132,7 @@ public class City {
             try {
                 int i = 0;
                 Random random = new Random();
-                String[] upgrades = new String[7];
+                String[] upgrades = new String[MyUtils.getUpgradesQuantity()];
                 //String [] upnames = new String [8];
                 query = con.prepareStatement("select Type from Upgrades where level=0");
                 ResultSet rs = query.executeQuery();
@@ -155,7 +155,7 @@ public class City {
                 query.setString(1, spawnGUID);
                 String CityName = Generate.genCityName(con);
                 query.setString(2, CityName);
-                r = random.nextInt(7);
+                r = random.nextInt(MyUtils.getUpgradesQuantity());
                 CUpgradeType = upgrades[r];
                 //CUName=upnames[r];
                 query.setString(3, CUpgradeType);
@@ -204,7 +204,7 @@ public class City {
             try {
                 int i=0;
                 Random random=new Random();
-                String [] upgrades = new String [7];
+                String [] upgrades = new String [MyUtils.getUpgradesQuantity()];
                 //String [] upnames = new String [8];
                 query=con.prepareStatement("select Type from Upgrades where level=0");
                 ResultSet rs=query.executeQuery();
@@ -225,7 +225,7 @@ public class City {
                 String CName = new StringBuffer(Name).reverse().toString();
                 String CityName = CName.substring(0,1).toUpperCase()+CName.substring(1).toLowerCase();
                 query.setString(2, CityName);
-                r=random.nextInt(7);
+                r=random.nextInt(MyUtils.getUpgradesQuantity());
                 CUpgradeType=upgrades[r];
                 //CUName=upnames[r];
                 query.setString(3, CUpgradeType);
@@ -283,7 +283,7 @@ public class City {
                 query.setString(1, GUID);
                 CName=Generate.genCityName(con);
                 query.setString(2, CName);
-                r=random.nextInt(7);
+                r=random.nextInt(MyUtils.getUpgradesQuantity());
                 CUpgradeType=upgrades[r];
                 CUName=upnames[r];
                 query.setString(3, CUpgradeType);
