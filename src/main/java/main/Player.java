@@ -1468,6 +1468,13 @@ public class Player {
         catch (SQLException e) {Logwrite("commit", "SQL Error: "+e.toString());}
     }
 
+    private void rollback(Connection CON) {
+        try {
+            CON.rollback();
+        }
+        catch (SQLException e) {Logwrite("rollback", "SQL Error: "+e.toString());}
+    }
+
     public String FinishRoute(String TGUID) {
         int actionGold,actionExp;
         MyUtils.Logwrite("FinishRoute","Started by "+Name, r.freeMemory());
@@ -1492,6 +1499,7 @@ public class Player {
                         int accel = getPlayerUpgradeEffect1("speed");
                         int speed = getPlayerUpgradeEffect2("speed");
                         int cargo = getPlayerUpgradeEffect1("cargo");
+                        int cargo2 = getPlayerUpgradeEffect2("cargo");
                         int trade = getPlayerUpgradeEffect2("bargain");
                         City cityF = new City (TGUID, con);
                         try {
@@ -1516,9 +1524,10 @@ public class Player {
                             if (jresult.toString().contains("OK")) {
                                 Hirelings-=cityS.Level+cityF.Level;
                                 payResources("Hirelings",cityS.Level+cityF.Level);
-                                int bonus=10;
-                                actionGold=2*bonus;
-                                actionExp=5*bonus;
+                                //actionGold=(int)Math.floor((50 + cargo2) * (100+(float)trade)/100);
+                                //actionExp=50 + cargo2;
+                                actionGold=0;
+                                actionExp=50;
                                 jresult.put("Exp",actionExp);
                                 jresult.put("Gold",actionGold);
                                 getGold(actionGold);
@@ -1582,6 +1591,7 @@ public class Player {
                         int accel = getPlayerUpgradeEffect1("speed");
                         int speed = getPlayerUpgradeEffect2("speed");
                         int cargo = getPlayerUpgradeEffect1("cargo");
+                        int cargo2 = getPlayerUpgradeEffect2("cargo");
                         int trade = getPlayerUpgradeEffect2("bargain");
                         City cityF = new City (TGUID, con);
                         try {
@@ -1683,9 +1693,10 @@ public class Player {
                                     FRjarr.add(FRjobj);
                                     //Hirelings-=cityS.Level+cityF.Level;update();
                                     flag=true;
-                                    int bonus=10;
-                                    int actionGold=2*bonus;
-                                    int actionExp=5*bonus;
+                                    //int actionGold=(int)Math.floor((50 + cargo2) * (100+(float)trade)/100);
+                                    //int actionExp=50 + cargo2;
+                                    int actionGold=0;
+                                    int actionExp=50;
                                     jresult.put("Exp",actionExp);
                                     jresult.put("Gold",actionGold);
                                     getGold(actionGold);
@@ -2087,17 +2098,20 @@ public class Player {
                 jresult.put("Result", "O1502");
                 jresult.put("Message", "Слишком далеко!");
             } else {
-                if (Obsidian>5) {
+                if (payResources("Obsidian",5)) {
                     Tower tower = new Tower(con);
                     if (tower.set(GUID, Name, TLAT, TLNG)) {
+                        commit(con);
                         jresult.put("Result", "OK");
                         //getObsidian(-5);
                     } else {
+                        rollback(con);
                         jresult.put("Result", "DB001");
                         jresult.put("Message", "Ошибка обращения к БД");
                     }
                 }
-                else {jresult.put("Result", "O1503");
+                else {rollback(con);
+                    jresult.put("Result", "O1503");
                     jresult.put("Message", "Не хватает обсидиана!");}
             }
         }
@@ -2464,7 +2478,7 @@ public class Player {
     private String survey(int TLAT, int TLNG, String restype) {
         countSurvey(TLAT,TLNG,restype);
         try {
-            if (maxQuantity != -1 && payResources("hirelings", 10) && updateSurveys(TLAT, TLNG, restype)) {
+            if (maxQuantity != -1 && payResources("Hirelings", 10) && updateSurveys(TLAT, TLNG, restype)) {
                 Hirelings-=10;
                 con.commit();
                 jresult.put("Result", "OK");
@@ -2484,7 +2498,7 @@ public class Player {
     private String extract(int TLAT, int TLNG, String restype) {
         countSurvey(TLAT,TLNG,restype);
         try {
-            if (maxQuantity != -1 && updateExtraction(TLAT, TLNG, restype) && addResource(restype, currentQuantity) && payResources("hirelings",100) ) {
+            if (maxQuantity != -1 && updateExtraction(TLAT, TLNG, restype) && addResource(restype, currentQuantity) && payResources("Hirelings",100) ) {
                 Hirelings-=100;
                 con.commit();
                 jresult.put("Result", "OK");
@@ -2665,8 +2679,12 @@ public class Player {
             JSONObject jobj = new JSONObject();
             Portal portal = new Portal(Race, con);
             jresult = portal.Donate(GOLD, OBSIDIAN);
-            jobj.put("Gold",readResource("Gold"));
-            jobj.put("Obsidian",readResource("Obsidian"));
+            jobj.put("Type","Gold");
+            jobj.put("Quantity",readResource("Gold"));
+
+            jobj=new JSONObject();
+            jobj.put("Type","Obsidian");
+            jobj.put("Quantity",readResource("Obsidian"));
             jarr.add(jobj);
             jresult.put("playerRes",jarr);
             jresult.put("Result","OK");

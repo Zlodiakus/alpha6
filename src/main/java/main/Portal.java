@@ -69,16 +69,24 @@ public class Portal {
         JSONArray jarr = new JSONArray();
         JSONObject jobj = new JSONObject();
 
-        jobj.put("Gold", Gold);
-        jobj.put("Obsidian", Obsidian);
+        jobj.put("Type", "Gold");
+        jobj.put("Quantity", Gold);
+        jarr.add(jobj);
+        jobj = new JSONObject();
+        jobj.put("Type", "Obsidian");
+        jobj.put("Quantity", Obsidian);
         jarr.add(jobj);
         jresult.put("portalLevel",Level);
         jresult.put("portalRes",jarr);
 
         jarr = new JSONArray();
         jobj = new JSONObject();
-        jobj.put("Gold", nextGold);
-        jobj.put("Obsidian", nextObsidian);
+        jobj.put("Type", "Gold");
+        jobj.put("Quantity", nextGold);
+        jarr.add(jobj);
+        jobj = new JSONObject();
+        jobj.put("Type", "Obsidian");
+        jobj.put("Quantity", nextObsidian);
         jarr.add(jobj);
 
         jresult.put("portalNeed",jarr);
