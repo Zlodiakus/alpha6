@@ -391,6 +391,7 @@ public class Player {
             Level += 1;
             flagLevelChanged=true;
         }
+        update();
     }
 
 
