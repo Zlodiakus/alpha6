@@ -31,14 +31,13 @@ int Quantity=Integer.parseInt(QuantityS);
 String resType=request.getParameter("resType");
 if (resType == null) resType="";
 
-String Gold=request.getParameter("Gold");
-if (Gold == null) Obsidian="0";
+String sGold=request.getParameter("Gold");
+if (Gold == null) sGold="0";
+String sObsidian=request.getParameter("Obsidian");
+if (Obsidian == null) sObsidian="0";
 
-String Obsidian=request.getParameter("Obsidian");
-if (Obsidian == null) Obsidian="0";
-
-int Gold=Integer.parseInt(Gold);
-int Obsidian=Integer.parseInt(Obsidian);
+int Gold=Integer.parseInt(sGold);
+int Obsidian=Integer.parseInt(sObsidian);
 
 int PLAT=Integer.parseInt(PLatS);
 int PLNG=Integer.parseInt(PLngS);
