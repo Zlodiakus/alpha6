@@ -32,9 +32,9 @@ String resType=request.getParameter("resType");
 if (resType == null) resType="";
 
 String sGold=request.getParameter("Gold");
-if (Gold == null) sGold="0";
+if (sGold == null) sGold="0";
 String sObsidian=request.getParameter("Obsidian");
-if (Obsidian == null) sObsidian="0";
+if (sObsidian == null) sObsidian="0";
 
 int Gold=Integer.parseInt(sGold);
 int Obsidian=Integer.parseInt(sObsidian);
