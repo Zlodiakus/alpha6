@@ -2013,7 +2013,7 @@ public class Player {
                 result=extract(TLAT,TLNG,resType);
                 break;
             case "getPortalInfo":
-                result=getPortalInfo().toString();
+                result=getPortalInfo();
                 break;
             case "portalDonate":
                 result=portalDonate(GOLD,OBSIDIAN);
