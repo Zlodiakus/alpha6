@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import static main.MyUtils.Logwrite;
+import static main.MyUtils.Message;
 
 public class Portal {
     int Level, Gold, Obsidian, nextGold, nextObsidian;
@@ -105,6 +106,8 @@ public class Portal {
     private void checkForLevel() {
         if (Gold>=nextGold && Obsidian >=nextObsidian) {
             Level+=1;
+            //Отправить сообщения всем игрокам фракции
+            MyUtils.MessageFrac(Race,"Построен уровень портала фракции! Текущий уровень: "+Level,10,0,0,0);
             Gold-=nextGold;
             Obsidian-=nextObsidian;
             portalNeed();
@@ -120,6 +123,7 @@ public class Portal {
             query.setInt(3,Level);
             query.setInt(4,Race);
             query.execute();
+            con.commit();
         }
         catch (SQLException e) {Logwrite("Portal.save","SQL Error: "+e.toString());}
     }

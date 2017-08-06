@@ -2730,7 +2730,7 @@ public class Player {
 
     private String portalDonate(int GOLD, int OBSIDIAN) {
         if (payResources("Gold",GOLD) && payResources("Obsidian", OBSIDIAN)) {
-            commit(con);
+            //commit(con);
             JSONObject jobj = new JSONObject();
             Portal portal = new Portal(Race, con);
             jresult = portal.Donate(GOLD, OBSIDIAN);

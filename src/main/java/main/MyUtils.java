@@ -315,6 +315,25 @@ public class MyUtils {
 		}
 	}
 
+	public static void MessageFrac(int Race, String Mess, int Type, int State, int Lat, int Lng) {
+		Connection con;
+		PreparedStatement query;
+		try {
+			con = DBUtils.ConnectDB();
+			query = con.prepareStatement("select PGUID from Players where Race=?");
+			query.setInt(1,Race);
+			ResultSet rs = query.executeQuery();
+			while (rs.next()) {
+				Message(rs.getString("PGUID"),Mess,Type,State,Lat,Lng);
+			}
+			con.close();
+		} catch (SQLException | NamingException e) {
+			Logwrite("MyUtils.MessageFrac","SQL Error: "+e.toString());
+		}
+
+	}
+
+
 	public static void clearLogs() {
 		Connection con;
 		PreparedStatement query;
