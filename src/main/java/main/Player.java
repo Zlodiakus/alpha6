@@ -2084,9 +2084,11 @@ public class Player {
                         break;
                     case "obsidian":
                        //сюда не должны попадать
-                        // getObsidian(chest.bonus);
-                       // addStat("obsidianed", chest.bonus);
-                       // jresult.put("Obsidian", chest.bonus);
+                         //getObsidian(chest.bonus);
+                        addResource("Obsidian",chest.bonus);
+                        commit(con);
+                        addStat("obsidianed", chest.bonus);
+                        jresult.put("Obsidian", chest.bonus);
                         break;
                     default:
                         jresult.put("Result", "O1401");
