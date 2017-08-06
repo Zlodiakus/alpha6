@@ -78,7 +78,7 @@ public class Player {
         con = CON;
         GUID = PGUID;
         try {
-            query = con.prepareStatement("select Name, Level, Exp, Gold, Obsidian, Race, Hirelings from Players where GUID=?");
+            query = con.prepareStatement("select Name, Level, Exp, Race from Players where GUID=?");
             query.setString(1, GUID);
             ResultSet rs = query.executeQuery();
             if (rs.isBeforeFirst()) {
@@ -86,13 +86,18 @@ public class Player {
                 Name = rs.getString("Name");
                 Level = rs.getInt("Level");
                 Exp = rs.getInt("Exp");
-                Gold = rs.getInt("Gold");
-                Obsidian = rs.getInt("Obsidian");
+                //Gold = rs.getInt("Gold");
+                //Obsidian = rs.getInt("Obsidian");
                 Race = rs.getInt("Race");
-                Hirelings = rs.getInt("Hirelings");
+                //Hirelings = rs.getInt("Hirelings");
             } else {
                 MyUtils.Logwrite("Player","Player "+GUID+" not found");
             }
+
+            Gold=readResource("Gold");
+            Obsidian=readResource("Obsidian");
+            Hirelings=readResource("Hirelings");
+
             query = con.prepareStatement("select 10*sum(Life) as HirelingsInAmbushes from Ambushes where PGUID=?");
             query.setString(1,GUID);
             rs = query.executeQuery();
@@ -131,7 +136,7 @@ public class Player {
         if (!result.equals("")) result = "No access to DB: " + result;
 
         try {
-            query = con.prepareStatement("select z1.GUID, z1.Name, z1.Level, z1.Exp, z1.Gold, z1.Obsidian, z1.Race, z2.Lat, z2.Lng, z1.Hirelings from Connections z0, Players z1, GameObjects z2 where z0.Token=? and z0.PGUID=z1.GUID and z2.GUID=z1.GUID");
+            query = con.prepareStatement("select z1.GUID, z1.Name, z1.Level, z1.Exp, z1.Race, z2.Lat, z2.Lng from Connections z0, Players z1, GameObjects z2 where z0.Token=? and z0.PGUID=z1.GUID and z2.GUID=z1.GUID");
             query.setString(1, Token);
             rs = query.executeQuery();
             if (rs.isBeforeFirst()) {
@@ -140,16 +145,20 @@ public class Player {
                 Name = rs.getString("Name");
                 Level = rs.getInt("Level");
                 Exp = rs.getInt("Exp");
-                Gold = rs.getInt("Gold");
-                Obsidian = rs.getInt("Obsidian");
+                //Gold = rs.getInt("Gold");
+                //Obsidian = rs.getInt("Obsidian");
                 Race = rs.getInt("Race");
                 OldLat = rs.getInt("Lat");
                 OldLng = rs.getInt("Lng");
-                Hirelings = rs.getInt("Hirelings");
+                //Hirelings = rs.getInt("Hirelings");
                 rs.close();
             } else {
                 LastError = MyUtils.getJSONError("NOUSERFOUND", "(" + Token + ")");
             }
+            Gold=readResource("Gold");
+            Obsidian=readResource("Obsidian");
+            Hirelings=readResource("Hirelings");
+
             PreparedStatement query2 = con.prepareStatement("select 10*sum(Life) as HirelingsInAmbushes from Ambushes where PGUID=?");
             query2.setString(1,GUID);
             ResultSet rs2 = query2.executeQuery();
@@ -229,10 +238,11 @@ public class Player {
             rs.first();
             GUID=rs.getString("GUID");
             rs.close();
-            query=con.prepareStatement("insert into Players (GUID, Name, Level, Exp, Gold,Class, Race) values (?,?,1,0,0,0,0)");
+            query=con.prepareStatement("insert into Players (GUID, Name, Level, Exp, Class, Race) values (?,?,1,0,0,0)");
             query.setString(1,GUID);
             query.setString(2,Login);
             query.execute();
+            writeResource("Gold",0);
             query=con.prepareStatement("insert into Stats (PGUID) values (?)");
             query.setString(1,GUID);
             query.execute();
@@ -1361,7 +1371,8 @@ public class Player {
                         actionExp=2*bonus;
                         jobj.put("Exp",actionExp);
                         jobj.put("Gold",actionGold);
-                        //Hirelings -= 5 * ambush.Life; //апдейт в гетГолде пройдет
+                        //TODO payResources не вычитает значения из соответствующей переменной плеера. либо убирать эти переменные из плеера, либо уменьшать их параллельно
+                        Hirelings -= 5;// * ambush.Life; //апдейт в гетГолде пройдет
                         payResources("Hirelings",5);
                         getGold(actionGold);
                         getExp(actionExp);
@@ -1503,7 +1514,7 @@ public class Player {
                             Caravan caravan = new Caravan(con);
                             jresult = caravan.FinishRoute(RGUID, TGUID, speed, accel, cargo, trade, con);
                             if (jresult.toString().contains("OK")) {
-                                //Hirelings-=cityS.Level+cityF.Level;
+                                Hirelings-=cityS.Level+cityF.Level;
                                 payResources("Hirelings",cityS.Level+cityF.Level);
                                 int bonus=10;
                                 actionGold=2*bonus;
@@ -1590,6 +1601,7 @@ public class Player {
 
                         if (!payResources("Hirelings",cityS.Level+cityF.Level)) {jresult.put("Result","O0606");jresult.put("Message","Недостаточно людей для запуска каравана. Нужно "+(cityS.Level+cityF.Level));res=jresult.toString();flag=false;}
                         else {
+                            Hirelings-=cityS.Level+cityF.Level;
                             //Caravan caravan = new Caravan(con);
                             //res = caravan.FinishRoute(RGUID, TGUID, speed, accel, cargo, con);
                             String CGUID=TGUID;
@@ -2446,6 +2458,7 @@ public class Player {
         countSurvey(TLAT,TLNG,restype);
         try {
             if (maxQuantity != -1 && payResources("hirelings", 10) && updateSurveys(TLAT, TLNG, restype)) {
+                Hirelings-=10;
                 con.commit();
                 jresult.put("Result", "OK");
                 //все кроме Result OK временно для тестирования. остальная информация будет приходить после завершения сюрвея через гетМесседж
@@ -2465,6 +2478,7 @@ public class Player {
         countSurvey(TLAT,TLNG,restype);
         try {
             if (maxQuantity != -1 && updateExtraction(TLAT, TLNG, restype) && addResource(restype, currentQuantity) && payResources("hirelings",100) ) {
+                Hirelings-=100;
                 con.commit();
                 jresult.put("Result", "OK");
                 //jresult.put("resType", restype);
