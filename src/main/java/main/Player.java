@@ -712,6 +712,9 @@ public class Player {
 
         jresult.put("nextCityCost",jarr);
 
+        jarr=new JSONArray();
+        jobj = new JSONObject();
+
         //Кривой код, потенциально могу тут передавать notower в GUID'е
         if (tower) jresult.put("Tower", getTowerGUID());
         //int LeftToHire=getPlayerUpgradeEffect1("leadership") - Hirelings - HirelingsInAmbushes;
