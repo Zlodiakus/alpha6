@@ -1933,7 +1933,7 @@ public class Player {
     }
 
 
-    public String sendData(String ReqName, String TGUID, int TLAT, int TLNG, int RACE, int AMOUNT, String text, String ItemType, int Quantity, String resType) {
+    public String sendData(String ReqName, String TGUID, int TLAT, int TLNG, int RACE, int AMOUNT, String text, String ItemType, int Quantity, String resType, int GOLD, int OBSIDIAN) {
         //MyUtils.Logwrite("sendData","дошли");
         String result;
         switch (ReqName) {
@@ -2011,6 +2011,12 @@ public class Player {
                 break;
             case "Extract":
                 result=extract(TLAT,TLNG,resType);
+                break;
+            case "getPortalInfo":
+                result=getPortalInfo().toString();
+                break;
+            case "portalDonate":
+                result=portalDonate(GOLD,OBSIDIAN);
                 break;
 
             default:
@@ -2644,5 +2650,27 @@ public class Player {
         return false;
 
     }
+
+    private String getPortalInfo() {
+        Portal portal = new Portal(Race, con);
+        return portal.getInfo().toString();
+    }
+
+    private String portalDonate(int GOLD, int OBSIDIAN) {
+        if (payResources("Gold",GOLD) && payResources("Obsidian", OBSIDIAN)) {
+            commit(con);
+            JSONObject jobj = new JSONObject();
+            Portal portal = new Portal(Race, con);
+            jresult = portal.Donate(GOLD, OBSIDIAN);
+            jobj.put("Gold",readResource("Gold"));
+            jobj.put("Obsidian",readResource("Obsidian"));
+            jarr.add(jobj);
+            jresult.put("playerRes",jarr);
+            jresult.put("Result","OK");
+        }
+        else {jresult.put("Result","O2201");};
+        return jresult.toString();
+    }
+
 }
 
