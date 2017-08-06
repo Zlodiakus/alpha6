@@ -253,7 +253,7 @@ public class Authorize {
                 rs2.first();
                 //Создание игрока если нет
                 if (rs2.getInt(1)==0) {
-                    query=con.prepareStatement("insert into Players (GUID, Name, Level, Exp, Gold,Class, Race) values (?,?,1,0,0,0,0)");
+                    query=con.prepareStatement("insert into Players (GUID, Name, Level, Exp, Class, Race) values (?,?,1,0,0,0)");
                     query.setString(1, PGUID);
                     query.setString(2, login);
                     query.execute();

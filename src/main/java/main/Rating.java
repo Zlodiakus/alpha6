@@ -36,7 +36,7 @@ public class Rating {
         try {
             con=DBUtils.ConnectDB();
             //PreparedStatement stmt=con.prepareStatement("select  p.Name ,p.Level ,p.Gold ,p.Exp ,count(c.Distance) cor_count,sum(c.Distance) sum_distance,Max(c.Distance) max_distance,round(avg(c.Distance)) avg_distance, (select Name from Fractions where Id=p.Race) from Players p left join Caravans c on (p.GUID=c.PGUID and c.Finish is not null) WHERE p.Name !=  'Elf' group by p.Name,p.Level,p.Gold,p.Exp order by Exp desc");
-            PreparedStatement stmt=con.prepareStatement("select  p.Name ,p.Level, p.Exp, p.Gold, count(c.Distance) cor_count, p.Race, sum(c.profit) profit, s.ambushed, s.paladined, s.chested from Players p left join Caravans c on (p.GUID=c.PGUID and c.Finish is not null) left join Stats s on (p.GUID=s.PGUID) WHERE p.Name !=  'Elf' group by p.Name,p.Level,p.Gold,p.Exp order by Exp desc");
+            PreparedStatement stmt=con.prepareStatement("select  p.Name ,p.Level, p.Exp, (select Quantity from resources where PGUID=p.GUID and type='Gold') Gold, count(c.Distance) cor_count, p.Race, sum(c.profit) profit, s.ambushed, s.paladined, s.chested from Players p left join Caravans c on (p.GUID=c.PGUID and c.Finish is not null) left join Stats s on (p.GUID=s.PGUID) WHERE p.Name !=  'Elf' group by p.Name,p.Level,p.Exp, Gold order by Exp desc");
             ResultSet rs=stmt.executeQuery();
             rs.beforeFirst();
             while (rs.next()){
