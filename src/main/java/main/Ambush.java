@@ -266,7 +266,8 @@ public class Ambush {
         //PreparedStatement query;
         Player player=new Player(PGUID,con);
         player.getGold(bonus);
-        player.getExp(bonus);
+        int actionExp=5000;
+        player.getExp(actionExp);
         player.drinkAway(bonus);
         Chest chest=new Chest(con);
         int chestBonus=(int)(bonus*0.3);

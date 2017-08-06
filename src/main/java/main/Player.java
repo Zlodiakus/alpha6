@@ -535,7 +535,7 @@ public class Player {
                     float otherUpsEffect=getKoefByOtherUps(targetUpgrade.Type);
                     upcost=(int)(otherUpsEffect*(1+conc)*(targetUpgrade.Cost*RaceDiscount*(100-getPlayerUpgradeEffect1("bargain"))/100));
                     MyUtils.Logwrite("Player.BuyUpgrade","Player="+Name+", Race="+Race+", other Ups Effect = "+otherUpsEffect+", conc = "+conc+", Inf1="+city.Influence1+",Inf2="+city.Influence2+",Inf3="+city.Influence3+", RaceBonus="+Float.toString(RaceBonus)+", RaceDiscount="+Float.toString(RaceDiscount)+", upcost="+upcost+", flag="+flag);
-                    if (Gold >= upcost) {
+                    if (payResources("Gold",upcost)) {
                         Gold -= upcost;
                         UpdatePUpgrades(currentUpgrade.GUID, targetUpgrade.GUID);
                         update();
@@ -564,6 +564,7 @@ public class Player {
                             return jresult.toString();
                         }
                         else {
+                            rollback(con);
                             jobj = new JSONObject();
                             jobj.put("Type", nextUpgrade.Type);
                             jobj.put("Name", nextUpgrade.Name);
@@ -1336,7 +1337,7 @@ public class Player {
                 TTS=getPlayerUpgradeEffect2("set_ambushes");
                 Radius=getPlayerUpgradeEffect1("ambushes");
                 Life=1;//getPlayerUpgradeEffect2("ambushes"); - отменяем старый эффект апгрейда
-                if (Hirelings<10*Life) {jresult.put("Result", "O0204");jresult.put("Message","Вам не хватает наемников для установки засады!");res=jresult.toString();}
+                if (!payResources("Hirelings",10)) {rollback(con);jresult.put("Result", "O0204");jresult.put("Message","Вам не хватает наемников для установки засады!");res=jresult.toString();}
                 else {
                     Ambush ambush = new Ambush();
                     res = ambush.Set(GUID, TLAT, TLNG, Radius, -TTS, Life, false, con);
@@ -1388,10 +1389,11 @@ public class Player {
                     if (res.equals(jobj.toString())) {
                         //bonus = 10 + getPlayerUpgradeEffect2("paladin");
                         bonus = (int) (((20 + Math.min(720, ambush.TTS + 180) * ambush.Life) * getPlayerUpgradeEffect2("paladin") * (1+(float)(getPlayerUpgradeEffect2("bargain")/100)))*(100+getBounty()) / 2000);
-                        if (ambush.PGUID.equals("Elf")) bonus+=1000;
+                        actionExp=0;
+                        if (ambush.PGUID.equals("Elf")) {bonus+=1000;actionExp=1500;}
                         //jobj.put("Message", "Награда за уничтожение засады составила " + Integer.toString(bonus) + " золота!");
                         actionGold=bonus;
-                        actionExp=2*bonus;
+                        actionExp+=(20 + Math.min(720, ambush.TTS + 180))*5;
                         jobj.put("Exp",actionExp);
                         jobj.put("Gold",actionGold);
                         //TODO payResources не вычитает значения из соответствующей переменной плеера. либо убирать эти переменные из плеера, либо уменьшать их параллельно
@@ -1439,7 +1441,8 @@ public class Player {
             res=ambush.Destroy(TGUID,con);
             jobj.put("Result","OK");
             if (res.equals(jobj.toString())) {
-                Hirelings=Hirelings+ambush.Life*10;
+                Hirelings+=10;
+                addResource("Hirelings",10);
                 update();
                 MyUtils.Logwrite("Player.CancelAmbush","Ambush "+TGUID+" canceled by owner "+GUID);
             }
@@ -1550,7 +1553,7 @@ public class Player {
                                 //actionGold=(int)Math.floor((50 + cargo2) * (100+(float)trade)/100);
                                 //actionExp=50 + cargo2;
                                 actionGold=0;
-                                actionExp=50;
+                                actionExp=500;
                                 jresult.put("Exp",actionExp);
                                 jresult.put("Gold",actionGold);
                                 getGold(actionGold);
@@ -1719,7 +1722,7 @@ public class Player {
                                     //int actionGold=(int)Math.floor((50 + cargo2) * (100+(float)trade)/100);
                                     //int actionExp=50 + cargo2;
                                     int actionGold=0;
-                                    int actionExp=50;
+                                    int actionExp=500;
                                     jresult.put("Exp",actionExp);
                                     jresult.put("Gold",actionGold);
                                     getGold(actionGold);
@@ -2261,7 +2264,8 @@ public class Player {
                     RaceDiscount=1-RaceBonus/4;
                     hireCost = (int) ((1+conc)*(RaceDiscount * AMOUNT * (int) (100 * Math.sqrt(city.Level)) * (100 - getPlayerUpgradeEffect1("bargain")) / 100));
 
-                    if (Gold < hireCost) {
+                    if (!payResources("Gold",hireCost)) {
+                        rollback(con);
                         jresult.put("Result", "O1303");
                         jresult.put("Message", "Вам не хватает денег! Требуется " + hireCost + " золота!");
                         MyUtils.Logwrite("hirePeople",Name+" Вам не хватает денег! Требуется " + hireCost + " золота!", r.freeMemory());
@@ -2338,9 +2342,10 @@ public class Player {
                 City city = new City(CGUID, con);
                 //mapper=getPlayerUpgradeEffect2("founder");
                 jresult = city.createCity(GUID, TLAT, TLNG);
-                getExp(1000);
+                int actionExp=2500;
+                getExp(actionExp);
                 commit(con);
-                jresult.put("Exp",1000);
+                jresult.put("Exp",actionExp);
                 jresult.put("Level",Level);
                 jresult.put("isLevelChanged",flagLevelChanged);
             } else {
