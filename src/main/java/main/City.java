@@ -362,12 +362,25 @@ public class City {
         }
     }
 
+    private void addTrySpawn() {
+        try {
+            PreparedStatement query = con.prepareStatement("update Cities set tries=tries+1 where GUID=?");
+            query.setString(1, GUID);
+            query.execute();
+            query.close();
+            con.commit();
+        } catch (SQLException e) {
+            MyUtils.Logwrite("City.addTrySpawn",GUID+". SQL Error: "+e.toString());
+        }
+    }
+
     public void getGold(int GOLD, int Race) {
         PreparedStatement query;
         Exp += GOLD;
         if (checkForLevel()) {
             bonusCityRecount((1+1/(20+(float)Level)));
             Level += 1;
+            addTrySpawn();
         }
         if (Race==1) Influence1+=GOLD;
         if (Race==2) Influence2+=GOLD;
