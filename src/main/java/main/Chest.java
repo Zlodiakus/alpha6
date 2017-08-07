@@ -95,7 +95,7 @@ public class Chest {
         Date date = new Date();
         PreparedStatement query, query0;
         try{
-            query0=con.prepareStatement("select count(1) from GameObjects where Type='City' and 100>=round(6378137 * acos(cos(Lat / 1e6 * PI() / 180) * cos(? / 1e6 * PI() / 180) * cos(Lng / 1e6 * PI() / 180 - ? / 1e6 * PI() / 180) + sin(Lat / 1e6 * PI() / 180) * sin(? / 1e6 * PI() / 180)))");
+            query0=con.prepareStatement("select count(1) from GameObjects where Type='City' and 50>=round(6378137 * acos(cos(Lat / 1e6 * PI() / 180) * cos(? / 1e6 * PI() / 180) * cos(Lng / 1e6 * PI() / 180 - ? / 1e6 * PI() / 180) + sin(Lat / 1e6 * PI() / 180) * sin(? / 1e6 * PI() / 180)))");
             query0.setInt(1,chestLat);
             query0.setInt(2,chestLng);
             query0.setInt(3,chestLat);
