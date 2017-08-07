@@ -48,6 +48,9 @@ public class City {
     public City (Connection CON) {
         con=CON;
     }
+    public City (Connection CON, String CGUID) {
+        con=CON;GUID=CGUID;
+    }
 
     public void update() {
         PreparedStatement query;

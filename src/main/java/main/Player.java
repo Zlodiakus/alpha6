@@ -2343,7 +2343,7 @@ public class Player {
             int obsidianToNextCity=Math.max(0,(citiesFounded-10));
             if (payResources("Gold",goldToNextCity) && payResources("Obsidian",obsidianToNextCity)) {
                 CGUID=UUID.randomUUID().toString();
-                City city = new City(CGUID, con);
+                City city = new City(con,CGUID);
                 //mapper=getPlayerUpgradeEffect2("founder");
                 jresult = city.createCity(GUID, TLAT, TLNG);
                 int actionExp=2500;
