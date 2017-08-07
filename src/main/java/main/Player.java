@@ -2277,6 +2277,7 @@ public class Player {
                         city.Hirelings -= AMOUNT;
                         city.getGold((int)(hireCost/((1+conc)*(1+conc))));
                         Hirelings += AMOUNT;
+                        addResource("Hirelings",AMOUNT);
                         city.update();
                         update();
                         jresult.put("Result", "OK");
