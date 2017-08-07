@@ -1165,7 +1165,8 @@ public class Player {
                     Inf1 = rs.getLong("Influence1");
                     Inf2 = rs.getLong("Influence2");
                     Inf3 = rs.getLong("Influence3");
-                    CRadius=50+2*(CLevel - 1);
+                    //CRadius=50+2*(CLevel - 1);
+                    CRadius=50;
                     CreatorName=(rs.getString("CreatorName") == null)?rs.getString("CityCreatorName"):rs.getString("CreatorName");
                     CHirelings=rs.getInt("Hirelings");
                     jobj.put("GUID", TGUID);

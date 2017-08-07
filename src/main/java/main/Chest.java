@@ -95,23 +95,33 @@ public class Chest {
         Date date = new Date();
         PreparedStatement query;
         try{
-            query = con.prepareStatement("insert into tchests (GUID,level,type,value,created) VALUES (?,?,?,?,?)");
-            String chestGUID = UUID.randomUUID().toString();
-            query.setString(1, chestGUID);
-            query.setInt(2, chestLevel);
-            query.setString(3, chestType);
-            query.setInt(4,chestBonus);
-            query.setString(5,DTMS.format(date));
-            query.execute();
+            query=con.prepareStatement("select count(1) from GameObjects where Type='City' and 10000>=round(6378137 * acos(cos(Lat / 1e6 * PI() / 180) * cos(? / 1e6 * PI() / 180) * cos(Lng / 1e6 * PI() / 180 - ? / 1e6 * PI() / 180) + sin(Lat / 1e6 * PI() / 180) * sin(? / 1e6 * PI() / 180)))");
+            query.setInt(1,chestLat);
+            query.setInt(2,chestLng);
+            query.setInt(3,chestLat);
+            ResultSet rs = query.executeQuery();
+            rs.first();
             query.close();
+            if (rs.getInt(1)>0) {MyUtils.Logwrite("Chest.generate", "Слишком близко к городу. "+chestLat+"|"+chestLng);}
+            else {
+                query = con.prepareStatement("insert into tchests (GUID,level,type,value,created) VALUES (?,?,?,?,?)");
+                String chestGUID = UUID.randomUUID().toString();
+                query.setString(1, chestGUID);
+                query.setInt(2, chestLevel);
+                query.setString(3, chestType);
+                query.setInt(4, chestBonus);
+                query.setString(5, DTMS.format(date));
+                query.execute();
+                query.close();
 
-            query = con.prepareStatement("INSERT INTO GameObjects(GUID,Lat,Lng,Type)VALUES(?,?,?,'Chest')");
-            query.setString(1, chestGUID);
-            query.setInt(2, chestLat);
-            query.setInt(3, chestLng);
-            query.execute();
-            query.close();
-            con.commit();
+                query = con.prepareStatement("INSERT INTO GameObjects(GUID,Lat,Lng,Type)VALUES(?,?,?,'Chest')");
+                query.setString(1, chestGUID);
+                query.setInt(2, chestLat);
+                query.setInt(3, chestLng);
+                query.execute();
+                query.close();
+                con.commit();
+            }
         } catch (SQLException e) {
             MyUtils.Logwrite("Chest.generate", "Error:" + e.toString());
         }

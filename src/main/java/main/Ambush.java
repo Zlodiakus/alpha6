@@ -168,7 +168,8 @@ public class Ambush {
                             minDist=curDist;
                             minName="возле города "+CName;
                         }
-                        if (curDist<50+2*(CLevel-1)) {
+                        //if (curDist<50+2*(CLevel-1)) {
+                        if (curDist<50) {
                             result=false;
                             rs.last();
                         }
