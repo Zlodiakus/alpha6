@@ -260,6 +260,9 @@ public class Authorize {
                     query=con.prepareStatement("insert into resources (PGUID, Type, Quantity) values (?,'Hirelings',100)");
                     query.setString(1, PGUID);
                     query.execute();
+                    query=con.prepareStatement("insert into resources (PGUID, Type, Quantity) values (?,'Gold',0)");
+                    query.setString(1, PGUID);
+                    query.execute();
                     query=con.prepareStatement("insert into Stats (PGUID) values (?)");
                     query.setString(1, PGUID);
                     query.execute();

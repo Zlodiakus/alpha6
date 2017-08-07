@@ -93,15 +93,14 @@ public class Chest {
     {
         DateFormat DTMS = new SimpleDateFormat("dd.MM.yyyy HH");
         Date date = new Date();
-        PreparedStatement query;
+        PreparedStatement query, query0;
         try{
-            query=con.prepareStatement("select count(1) from GameObjects where Type='City' and 10000>=round(6378137 * acos(cos(Lat / 1e6 * PI() / 180) * cos(? / 1e6 * PI() / 180) * cos(Lng / 1e6 * PI() / 180 - ? / 1e6 * PI() / 180) + sin(Lat / 1e6 * PI() / 180) * sin(? / 1e6 * PI() / 180)))");
-            query.setInt(1,chestLat);
-            query.setInt(2,chestLng);
-            query.setInt(3,chestLat);
-            ResultSet rs = query.executeQuery();
+            query0=con.prepareStatement("select count(1) from GameObjects where Type='City' and 10000>=round(6378137 * acos(cos(Lat / 1e6 * PI() / 180) * cos(? / 1e6 * PI() / 180) * cos(Lng / 1e6 * PI() / 180 - ? / 1e6 * PI() / 180) + sin(Lat / 1e6 * PI() / 180) * sin(? / 1e6 * PI() / 180)))");
+            query0.setInt(1,chestLat);
+            query0.setInt(2,chestLng);
+            query0.setInt(3,chestLat);
+            ResultSet rs = query0.executeQuery();
             rs.first();
-            query.close();
             if (rs.getInt(1)>0) {MyUtils.Logwrite("Chest.generate", "Слишком близко к городу. "+chestLat+"|"+chestLng);}
             else {
                 query = con.prepareStatement("insert into tchests (GUID,level,type,value,created) VALUES (?,?,?,?,?)");
@@ -122,6 +121,7 @@ public class Chest {
                 query.close();
                 con.commit();
             }
+            query0.close();
         } catch (SQLException e) {
             MyUtils.Logwrite("Chest.generate", "Error:" + e.toString());
         }
