@@ -227,6 +227,30 @@ public class Player {
 
     }
 
+
+//Сложна как-то потом с рейтингом будет работать, оставлю пока старую таблицу
+    public void addStat2(String columnC, int valueV) {
+
+        MyUtils.Logwrite("Player.addStat2","Start! "+Name+". column = "+columnC+". value = "+Integer.toString(valueV));
+        PreparedStatement query;
+        try {
+            query=con.prepareStatement("INSERT INTO Stats2 (PGUID,Type,Value) VALUES (?,?,?) ON DUPLICATE KEY UPDATE Value=?");
+            query.setString(1,GUID);
+            query.setString(2,columnC);
+            query.setInt(3,valueV);
+            query.setInt(4,valueV);
+
+            //MyUtils.Logwrite("Player.addStat","tempStr = "+tempStr+", query="+query.toString());
+            query.execute();
+            con.commit();
+            query.close();
+            MyUtils.Logwrite("Player.addStat2",Name+". column = "+columnC+". value = "+Integer.toString(valueV));
+        } catch (SQLException e) {
+            MyUtils.Logwrite("Player.addStat2",Name+". Error "+e.toString());
+        }
+
+    }
+
     public String register(String Login, String Password) {
         PreparedStatement query;
 
@@ -1408,6 +1432,7 @@ public class Player {
                         jobj.put("isLevelChanged",flagLevelChanged);
                         //TODO переделать статистику
                         addStat("paladined", bonus);
+                        addStat("paladinedExp", actionExp);
                         addStat("Npaladins", 1);
                         MyUtils.Message(ambush.PGUID, "Ваша засада " + ambush.Name + " была уничтожена!", 2, 0, ambush.Lat, ambush.Lng);
                         res = jobj.toString();
@@ -2738,6 +2763,15 @@ public class Player {
             JSONObject jobj = new JSONObject();
             Portal portal = new Portal(Race, con);
             jresult = portal.Donate(GOLD, OBSIDIAN);
+
+            if (jresult.toString().contains("DB001"))
+            {
+                rollback(con); return jresult.toString();
+            }
+
+            addStat("donatedGold",GOLD);
+            addStat("donatedObsidian",OBSIDIAN);
+
             jobj.put("Type","Gold");
             jobj.put("Quantity",readResource("Gold"));
 

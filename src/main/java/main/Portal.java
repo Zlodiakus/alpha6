@@ -99,8 +99,14 @@ public class Portal {
         Gold+=GOLD;
         Obsidian+=OBSIDIAN;
         checkForLevel();
-        save();
-        return getInfo();
+        if (save()) {
+            return getInfo();
+        }
+        else {
+            JSONObject jresult =new JSONObject();
+            jresult.put("Result","DB001");
+            return jresult;
+        }
     }
 
     private void checkForLevel() {
@@ -115,7 +121,7 @@ public class Portal {
         }
     }
 
-    private void save() {
+    private boolean save() {
         try{
             PreparedStatement query=con.prepareStatement("update Fractions set Gold=?, Obsidian=?, portalLevel=? where Id=?");
             query.setInt(1,Gold);
@@ -124,8 +130,9 @@ public class Portal {
             query.setInt(4,Race);
             query.execute();
             con.commit();
+            return true;
         }
-        catch (SQLException e) {Logwrite("Portal.save","SQL Error: "+e.toString());}
+        catch (SQLException e) {Logwrite("Portal.save","SQL Error: "+e.toString());return false;}
     }
 }
 
