@@ -267,7 +267,7 @@ public World() throws SQLException {
             for (i=0;i<=totalChests;i++)
             {
                 int choosenCity= random.nextInt(totalCities);
-                rs.absolute(choosenCity);
+                rs.absolute(1+choosenCity);
                 Chest chest = new Chest(con);
                 chest.generate(rs.getInt("Level"),rs.getInt("Lat"),rs.getInt("Lng"));
             }
