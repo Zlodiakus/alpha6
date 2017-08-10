@@ -268,6 +268,7 @@ public class Player {
             query.execute();
             writeResource("Gold",0);
             writeResource("Hirelings",100);
+            writeResource("Obsidian",0);
             query=con.prepareStatement("insert into Stats (PGUID) values (?)");
             query.setString(1,GUID);
             query.execute();
