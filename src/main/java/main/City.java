@@ -78,7 +78,7 @@ public class City {
         String CName, minName="в чистом поле";
         int TLat,TLng, TRadius, CLevel;
         int minDist=125;
-        int minSelfDist=250;
+        int minSelfDist=125;
         boolean result=true;
         try {
             query = con.prepareStatement("select z2.Name,z1.Lat,z1.Lng,z2.Creator from GameObjects z1, Cities z2 where z2.GUID=z1.GUID and z1.Type='City' and z2.Creator=? and round(6378137 * acos(cos(z1.Lat / 1e6 * PI() / 180) * cos(? / 1e6 * PI() / 180) * cos(z1.Lng / 1e6 * PI() / 180 - ? / 1e6 * PI() / 180) + sin(z1.Lat / 1e6 * PI() / 180) * sin(? / 1e6 * PI() / 180)))<=?");
