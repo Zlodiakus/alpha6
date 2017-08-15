@@ -1422,6 +1422,7 @@ public class Player {
                         //jobj.put("Message", "Награда за уничтожение засады составила " + Integer.toString(bonus) + " золота!");
                         actionGold=bonus;
                         actionExp+=(20 + Math.min(720, ambush.TTS + 180))*5;
+                        actionExp*=2;
                         jobj.put("Exp",actionExp);
                         jobj.put("Gold",actionGold);
                         //TODO payResources не вычитает значения из соответствующей переменной плеера. либо убирать эти переменные из плеера, либо уменьшать их параллельно
@@ -1582,7 +1583,7 @@ public class Player {
                                 //actionGold=(int)Math.floor((50 + cargo2) * (100+(float)trade)/100);
                                 //actionExp=50 + cargo2;
                                 actionGold=0;
-                                actionExp=500;
+                                actionExp=1000;
                                 jresult.put("Exp",actionExp);
                                 jresult.put("Gold",actionGold);
                                 getGold(actionGold);
@@ -1751,7 +1752,7 @@ public class Player {
                                     //int actionGold=(int)Math.floor((50 + cargo2) * (100+(float)trade)/100);
                                     //int actionExp=50 + cargo2;
                                     int actionGold=0;
-                                    int actionExp=500;
+                                    int actionExp=1000;
                                     jresult.put("Exp",actionExp);
                                     jresult.put("Gold",actionGold);
                                     getGold(actionGold);
