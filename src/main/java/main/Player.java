@@ -2760,6 +2760,7 @@ public class Player {
     }
 
     private String portalDonate(int GOLD, int OBSIDIAN) {
+        Logwrite("Player.portalDonate","Start. Gold="+GOLD+". Obsidian="+OBSIDIAN);
         if (payResources("Gold",GOLD) && payResources("Obsidian", OBSIDIAN)) {
             //commit(con);
             JSONObject jobj = new JSONObject();
@@ -2783,8 +2784,10 @@ public class Player {
             jarr.add(jobj);
             jresult.put("playerRes",jarr);
             jresult.put("Result","OK");
+            Logwrite("Player.portalDonate","Finish. OK");
         }
-        else {jresult.put("Result","O2201");};
+        else {jresult.put("Result","O2201");Logwrite("Player.portalDonate","Finish. Error");};
+
         return jresult.toString();
     }
 
