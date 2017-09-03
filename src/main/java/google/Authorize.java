@@ -1,6 +1,7 @@
 package google;
 
 import main.DBUtils;
+import main.Player;
 import org.json.simple.JSONObject;
 
 import javax.naming.NamingException;
@@ -239,13 +240,14 @@ public class Authorize {
             con = DBUtils.ConnectDB();
 
             //Проверка пользователя
-            pstmt = con.prepareStatement("SELECT GUID,Login from Users WHERE email=?");
+            pstmt = con.prepareStatement("SELECT GUID, Login, Password from Users WHERE email=?");
             pstmt.setString(1, email);
             ResultSet rs = pstmt.executeQuery();
             if (rs.isBeforeFirst()) {
                 rs.next();
-                PGUID = rs.getString(1);
-                String login=rs.getString(2);
+                PGUID = rs.getString("GUID");
+                String login=rs.getString("Login");
+                String password=rs.getString("Password");
                 //Проверка игрока
                 query=con.prepareStatement("select count(1) from Players where GUID=?");
                 query.setString(1,PGUID);
@@ -253,6 +255,9 @@ public class Authorize {
                 rs2.first();
                 //Создание игрока если нет
                 if (rs2.getInt(1)==0) {
+                    Player player = new Player();
+                    player.register(login, password);
+/*
                     query=con.prepareStatement("insert into Players (GUID, Name, Level, Exp, Class, Race) values (?,?,1,0,0,0)");
                     query.setString(1, PGUID);
                     query.setString(2, login);
@@ -273,6 +278,7 @@ public class Authorize {
                     query.setString(1, PGUID);
                     query.execute();
                     con.commit();
+*/
                 }
                 rs2.close();
                 query.close();
@@ -301,7 +307,4 @@ public class Authorize {
         }
         return result;
     }
-
-
-
 }

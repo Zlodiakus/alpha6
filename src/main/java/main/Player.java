@@ -224,8 +224,7 @@ public class Player {
         } catch (SQLException e) {
             MyUtils.Logwrite("Player.addStat",Name+". Error "+e.toString());
         }
-
-    }
+   }
 
 
 //Сложна как-то потом с рейтингом будет работать, оставлю пока старую таблицу
@@ -251,9 +250,23 @@ public class Player {
 
     }
 
+    private boolean createPlayerResources() {
+        PreparedStatement query;
+        try {
+            query=con.prepareStatement("insert into resources (select ?,type,0 from resourceTypes)");
+            query.execute();
+            query.close();
+            return true;
+        } catch (SQLException e)
+        {
+            Logwrite("createPlayerRes","SQL ERROR: "+e.toString());
+            return false;
+        }
+    }
+
+
     public String register(String Login, String Password) {
         PreparedStatement query;
-
         try {
             query=con.prepareStatement("select GUID from Users where Login=? and Password=?");
             query.setString(1,Login);
@@ -266,9 +279,9 @@ public class Player {
             query.setString(1,GUID);
             query.setString(2,Login);
             query.execute();
-            writeResource("Gold",0);
-            writeResource("Hirelings",100);
-            writeResource("Obsidian",0);
+//            writeResource("Gold",0);
+//            writeResource("Hirelings",100);
+//            writeResource("Obsidian",0);
             query=con.prepareStatement("insert into Stats (PGUID) values (?)");
             query.setString(1,GUID);
             query.execute();
@@ -277,11 +290,10 @@ public class Player {
             query.execute();
             query.close();
             if (generateStartUpgrades() && generateStartResources()) {
+                addResource("Hirelings",100);
                 con.commit();
                 return Login + " успешно зарегистрирован!";}
             else {con.rollback(); return Login + ", при регистрации возникли проблемы! Повторите попытку или обратитесь к администратору.";}
-
-
         } catch (SQLException e)
         {
             try {con.rollback();}
@@ -354,7 +366,7 @@ public class Player {
             query.setString(1,GUID);
             query.execute();
             return true;
-        } catch (SQLException e) { MyUtils.Logwrite("Player.generateStartResources","Error: "+e.toString());return false;}
+        } catch (SQLException e) { MyUtils.Logwrite("Player.genStartRes","SQL Error: "+e.toString());return false;}
     }
 
     public boolean generateStartUpgrades() {
@@ -373,7 +385,7 @@ public class Player {
             query.close();
             rs.close();
             return true;
-        } catch (SQLException e) { MyUtils.Logwrite("Player.generateStartUpgrades","Error: "+e.toString());return false; }
+        } catch (SQLException e) { MyUtils.Logwrite("generateStartUpgrades","Error: "+e.toString());return false; }
     }
 
 /* Переходим к "награде за действия", разделяем опыт и деньги
@@ -455,7 +467,7 @@ public class Player {
             con.commit();
             query.close();
         } catch (SQLException e) {
-            MyUtils.Logwrite("Player.UpdatePUpgrades","Failed. Player "+Name+" UGUID old = "+UGUIDold+" UGUID new = "+UGUIDnew+". SQL Error: "+e.toString());
+            MyUtils.Logwrite("UpdatePUpgrades","Failed. Player "+Name+" UGUID old = "+UGUIDold+" UGUID new = "+UGUIDnew+". SQL Error: "+e.toString());
         }
     }
 
@@ -470,7 +482,7 @@ public class Player {
             con.commit();
             query.close();
         } catch (SQLException e) {
-            MyUtils.Logwrite("Player.bonusUpgradeRecount","Failed. Player "+Name+". SQL Error: "+e.toString());
+            MyUtils.Logwrite("bonusUpgradeRecount","Failed. Player "+Name+". SQL Error: "+e.toString());
         }
     }
 
@@ -495,7 +507,7 @@ public class Player {
             con.commit();
             query.close();
         } catch (SQLException e) {
-            MyUtils.Logwrite("Player.profitUpgradeRecount","Failed. Player "+Name+". SQL Error: "+e.toString());
+            MyUtils.Logwrite("profitUpgradeRecount","Failed. Player "+Name+". SQL Error: "+e.toString());
         }
     }
     private float getKoefByOtherUps(String upType)
@@ -509,7 +521,7 @@ public class Player {
             rs.first();
             return 1+(float)rs.getInt(1)/10;
         } catch (SQLException e) {
-            MyUtils.Logwrite("Player.getKoefByOtherUps","Failed. Player "+Name+". SQL Error: "+e.toString());
+            MyUtils.Logwrite("getKoefByOtherUps","Failed. Player "+Name+". SQL Error: "+e.toString());
             return 1;
         }
     }
@@ -2114,15 +2126,14 @@ public class Player {
                 switch (chest.type) {
                     case "gold":
                         chest.bonus = (int) (chest.bonus * (1 + (float) getPlayerUpgradeEffect2("bargain") / 100));
-                        getGold(chest.bonus);
+                        //getGold(chest.bonus);
+                        addResource("gold",chest.bonus);
                         addStat("chested", chest.bonus);
                         jresult.put("Gold", chest.bonus);
                         break;
                     case "obsidian":
-                       //сюда не должны попадать
-                         //getObsidian(chest.bonus);
-                        addResource("Obsidian",chest.bonus);
-                        commit(con);
+                        addResource("obsidian",chest.bonus);
+                        //commit(con);
                         addStat("obsidianed", chest.bonus);
                         jresult.put("Obsidian", chest.bonus);
                         break;
@@ -2133,11 +2144,6 @@ public class Player {
                 }
                 addStat("Nchests", 1);
                 chest.delete();
-/*                String money="монет";
-                if (bonus % 10 > 1 && bonus % 10 > 5) money="монеты";
-                else if (bonus % 10 == 1) money="монету";
-                jresult.put("Message", "Вы нашли "+bonus+" "+money+"!");
-                */
             }
         }
         MyUtils.Logwrite("openChest", "Finished by " + Name, r.freeMemory());

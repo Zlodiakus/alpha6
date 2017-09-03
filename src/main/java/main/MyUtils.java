@@ -219,6 +219,10 @@ public class MyUtils {
 
 	public static void Logwrite(String str1,String str2) {
 //Connects:"+Integer.toString(DBUtils.getConCount())
+
+		String text30 = str1.length() > 30 ? str2.substring(0,30) : str1;
+		String text200 = str2.length() > 200 ? str2.substring(0,200) : str2;
+
 		Date date = new Date();
 		DateFormat DTMS = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.S");
 		Connection con;
@@ -227,8 +231,8 @@ public class MyUtils {
 			con = DBUtils.ConnectDB();
 			query=con.prepareStatement("insert into logs(module,text,logtime,Con) values (?,?,?,?)");
 //			query=con.prepareStatement("insert into logs(module,text,logtime) values (?,?,CONVERT_TZ(NOW(),'+00:00','+08:00'))");
-			query.setString(1,substr(str1,0,30));
-			query.setString(2,substr(str2,0,200));
+			query.setString(1,text30);
+			query.setString(2,text200);
 			query.setString(3,DTMS.format(date));
 			query.setInt(4,DBUtils.getConCount());
 			query.execute();
@@ -241,8 +245,8 @@ public class MyUtils {
 				con = DBUtils.ConnectDB();
 				query=con.prepareStatement("insert into logs(module,text,logtime) values (?,?,?)");
 //				query=con.prepareStatement("insert into logs(module,text,logtime) values (?,?,CONVERT_TZ(NOW(),'+00:00','+08:00'))");
-				query.setString(1,substr(str1,0,30));
-				query.setString(2,substr("Connections dropped on "+str2+". Error: "+e.toString(),0,200));
+				query.setString(1,text30);
+				query.setString(2,text200);
 				query.setString(3,DTMS.format(date));
 				query.execute();
 				con.commit();
