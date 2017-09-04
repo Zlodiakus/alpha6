@@ -2012,7 +2012,7 @@ public class Player {
     }
 
 
-    public String sendData(String ReqName, String TGUID, int TLAT, int TLNG, int RACE, int AMOUNT, String text, String ItemType, int Quantity, String resType, int GOLD, int OBSIDIAN) {
+    public String sendData(String ReqName, String TGUID, int TLAT, int TLNG, int RACE, int AMOUNT, String text, String ItemType, int Quantity, String clientTime, int GOLD, int OBSIDIAN) {
         //MyUtils.Logwrite("sendData","дошли");
         String result;
         switch (ReqName) {
@@ -2086,10 +2086,13 @@ public class Player {
                 result=putItemsTower(TGUID,ItemType,Quantity);
                 break;
             case "Survey":
-                result=survey(TLAT,TLNG,resType);
+                result=survey(TLAT,TLNG);
                 break;
-            case "Extract":
-                result=extract(TLAT,TLNG,resType);
+            case "startExtract":
+                result=startExtract(TLAT,TLNG,clientTime);
+                break;
+            case "finishExtract":
+                result=finishExtract(clientTime);
                 break;
             case "getPortalInfo":
                 result=getPortalInfo();
@@ -2097,6 +2100,9 @@ public class Player {
                 break;
             case "portalDonate":
                 result=portalDonate(GOLD,OBSIDIAN);
+                break;
+            case "removeSurvey":
+                result=removeSurvey(TGUID);
                 break;
 
             default:
@@ -2567,8 +2573,8 @@ public class Player {
         catch (SQLException e) {Logwrite("updateSurveys","SQL error: "+e.toString());return false;}
     }
 
-    private String survey(int TLAT, int TLNG, String restype) {
-        countSurvey(TLAT,TLNG,restype);
+    private String survey(int TLAT, int TLNG) {
+        /*countSurvey(TLAT,TLNG,restype);
         try {
             if (maxQuantity != -1 && payResources("Hirelings", 10) && updateSurveys(TLAT, TLNG, restype)) {
                 Hirelings-=10;
@@ -2576,14 +2582,29 @@ public class Player {
                 jresult.put("Result", "OK");
                 //все кроме Result OK временно для тестирования. остальная информация будет приходить после завершения сюрвея через гетМесседж
                 //jresult.put("resType",restype);
-                jresult.put("quantity", currentQuantity);
-                jresult.put("maxQuantity", maxQuantity);
+                //jresult.put("quantity", currentQuantity);
+                //jresult.put("maxQuantity", maxQuantity);
             } else {
                 con.rollback();
                 jresult.put("Result", "DB001");
             }
         }
         catch (SQLException e) {Logwrite("survey","SQL error: "+e.toString());jresult.put("Result", "DB001");}
+        */
+        return jresult.toString();
+    }
+
+    private String removeSurvey(String TGUID) {
+        try {
+            PreparedStatement query=con.prepareStatement("delete from surveys where GUID=?");
+            query.setString(1,TGUID);
+            query.execute();
+            con.commit();
+            jresult.put("Result","OK");
+            }
+        catch (SQLException e) {
+            Logwrite("removeSurvey","SQL error: "+e.toString());jresult.put("Result", "DB001");
+            }
         return jresult.toString();
     }
 
@@ -2604,6 +2625,201 @@ public class Player {
         catch (SQLException e) {Logwrite("extract","SQL error: "+e.toString());jresult.put("Result", "DB001");}
         return jresult.toString();
     }
+
+    private void cancelUnfinishedExtraction() {
+        try {
+            PreparedStatement query=con.prepareStatement("delete from extraction where finished is null");
+            query.execute();
+            con.commit();
+        }
+        catch (SQLException e) {
+            Logwrite("cancelUnfinishedExtraction","SQL Error: "+e.toString());
+        }
+    }
+
+    private boolean addEntryToExtraction(int TLAT, int TLNG, String startTime) {
+        try {
+            PreparedStatement query=con.prepareStatement("insert into extraction (PGUID,lat,lng,started,clientStarted) values (?,?,?,NOW(),?)");
+            query.setString(1,GUID);
+            query.setInt(2,TLAT);
+            query.setInt(3,TLNG);
+            query.setString(4,startTime);
+            query.execute();
+            con.commit();
+            return true;
+        }
+        catch (SQLException e) {
+            Logwrite("addEntryToExtraction","SQL Error: "+e.toString());
+            return false;
+        }
+    }
+
+    private double koefDepletion(int TLAT, int TLNG) {
+        double extractKoef=0.0;
+        try {
+            PreparedStatement query=con.prepareStatement("select count(1) from extraction where lat between ? and ? and lng between ? and ? and finished>NOW()-1");
+            query.setInt(1,TLAT/1000);
+            query.setInt(2,TLAT/1000+999);
+            query.setInt(3,TLNG/1000);
+            query.setInt(4,TLNG/1000+999);
+            ResultSet rs=query.executeQuery();
+            rs.first();
+            int extracts=rs.getInt(1);
+            if (isBetween(extracts,0,19)) {extractKoef=1.0;}
+            else if (isBetween(extracts,20,39)) {extractKoef=0.9;}
+            else if (isBetween(extracts,40,59)) {extractKoef=0.8;}
+            else if (isBetween(extracts,60,79)) {extractKoef=0.7;}
+            else if (isBetween(extracts,80,99)) {extractKoef=0.6;}
+            else if (isBetween(extracts,100,119)) {extractKoef=0.5;}
+            else if (isBetween(extracts,120,139)) {extractKoef=0.4;}
+            else if (isBetween(extracts,140,159)) {extractKoef=0.3;}
+            else if (isBetween(extracts,160,179)) {extractKoef=0.2;}
+            else {extractKoef=0.1;}
+        }
+        catch (SQLException e) {
+            Logwrite("Player.koefDepletion","SQL Error: "+e.toString());
+        }
+        return extractKoef;
+    }
+
+    private JSONObject getResourcesFromExtraction(int TLAT, int TLNG) {
+        JSONObject jobj = new JSONObject();
+        JSONObject jres = new JSONObject();
+        //в сюрвее должна быть инфа, тянем оттуда
+        try {
+            PreparedStatement query=con.prepareStatement("select type, maxQuantity,maxQuantity2,maxQuantity3 from surveys where PGUID=? and lat between ? and ? and lng between ? and ? and done=1");
+            query.setString(1,GUID);
+            query.setInt(2,TLAT/1000);
+            query.setInt(3,TLAT/1000+999);
+            query.setInt(4,TLNG/1000);
+            query.setInt(5,TLNG/1000+999);
+            ResultSet rs=query.executeQuery();
+            if (rs.isBeforeFirst()) {
+                rs.first();
+                String type1=rs.getString("type");
+                String type2="";
+                String type3="";
+                if (type1.equals("stone")) {
+                    type2="obsidian";
+                    type3="iron";
+                }
+                if (type1.equals("wood")) {
+                    type2="amber";
+                    type3="redwood";
+                }
+                if (type1.equals("grain")) {
+                    type2="hop";
+                    type3="wool";
+                }
+                double koefDepl=koefDepletion(TLAT, TLNG);
+
+                jobj.put("Type",type1);
+                int maxProb=rs.getInt("maxQuantity");
+                jobj.put("MaxProb",maxProb);
+                int prob=(int) (maxProb*koefDepl);
+                jobj.put("Prob",prob);
+                jarr.add(jobj);
+                jobj=new JSONObject();
+                jobj.put("Type",type2);
+                maxProb=rs.getInt("maxQuantity2");
+                jobj.put("MaxProb",maxProb);
+                prob=(int) (maxProb*koefDepl);
+                jobj.put("Prob",prob);
+                jarr.add(jobj);
+                jobj=new JSONObject();
+                jobj.put("Type",type3);
+                maxProb=rs.getInt("maxQuantity3");
+                jobj.put("MaxProb",maxProb);
+                prob=(int) (maxProb*koefDepl);
+                jobj.put("Prob",prob);
+                jarr.add(jobj);
+                jres.put("Result","OK");
+                jres.put("Survey", jarr);
+            }
+            else {
+                //вообще сюда не должны попадать
+                Logwrite("getResourcesFromExtraction",GUID + "не получил ресурсы, т.к. не найден завершенный survey для области TLAT="+TLAT+", TLNG="+TLNG);
+                jres.put("Result","O2401");
+            }
+        }
+        catch (SQLException e) {
+            Logwrite("getResourcesFromExtraction","SQL Error: "+e.toString());
+            jres.put("Result","DB001");
+        }
+    return jres;
+    }
+
+    private String startExtract(int TLAT, int TLNG, String startTime) {
+        //проверить на сюрвей?
+        try {
+            PreparedStatement query = con.prepareStatement("select 1 from surveys where PGUID=? and lat between ? and ? and lng between ? and ? and done=1");
+            query.setString(1, GUID);
+            query.setInt(2, TLAT / 1000);
+            query.setInt(3, TLAT / 1000 + 999);
+            query.setInt(4, TLNG / 1000);
+            query.setInt(5, TLNG / 1000 + 999);
+            ResultSet rs = query.executeQuery();
+            if (!rs.isBeforeFirst()) {
+                jresult.put("Result","O2101");
+                return jresult.toString();
+            }
+        }
+        catch (SQLException e) {
+            jresult.put("Result","DB001");
+            return jresult.toString();
+        }
+
+        cancelUnfinishedExtraction();
+        if (addEntryToExtraction(TLAT, TLNG, startTime)) {
+            jresult.put("Result","OK");
+        }
+        else {
+            jresult.put("Result","DB001");
+        }
+        return jresult.toString();
+    }
+
+    private boolean finishEntryInExtraction(String finishTime) {
+        try {
+            PreparedStatement query=con.prepareStatement("update extraction set finished=NOW(), clientFinished=? where PGUID=? and finished is null");
+            query.setString(1,finishTime);
+            query.setString(2,GUID);
+            query.execute();
+            con.commit();
+            return true;
+        }
+        catch (SQLException e) {
+            Logwrite("finishEntryInExtraction","SQL Error: "+e.toString());
+            return false;
+        }
+    }
+
+    private String finishExtract(String finishTime) {
+        int TLAT,TLNG;
+        try {
+            PreparedStatement query=con.prepareStatement("select lat,lng from extraction where finished is null and PGUID=?");
+            query.setString(1,GUID);
+            ResultSet rs = query.executeQuery();
+            if (rs.isBeforeFirst()) {
+                rs.first();
+                TLAT=rs.getInt("lat");
+                TLNG=rs.getInt("lng");
+                if (finishEntryInExtraction(finishTime)) {
+                    jresult=getResourcesFromExtraction(TLAT,TLNG);
+                }
+                else jresult.put("Result","DB001");
+            }
+            else {
+                jresult.put("Result","O2402"); //Не найдена начатая добыча ресурса
+            }
+        }
+        catch (SQLException e) {
+            Logwrite("finishExtract","SQL Error: "+e.toString());
+            jresult.put("Result","DB001");
+        }
+        return jresult.toString();
+    }
+
 
     public boolean addResource(String type, int quantity) {
         try {
