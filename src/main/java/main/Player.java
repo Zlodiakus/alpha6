@@ -900,6 +900,57 @@ public class Player {
             rs.close();
             query.close();
             jresult.put("Ambushes",jarr2);
+
+            //surveys
+            jarr2 = new JSONArray();
+            query=con.prepareStatement("select GUID,Lat,Lng,type,maxQuantity,currentQuantity,maxQuantity2,currentQuantity2,maxQuantity3,currentQuantity3 from surveys where PGUID=?");
+            query.setString(1, GUID);
+            rs = query.executeQuery();
+            while (rs.next()) {
+                jobj = new JSONObject();
+                jobj.put("Type","Survey");
+                jobj.put("GUID", rs.getString("GUID"));
+                jobj.put("Lat", rs.getInt("Lat"));
+                jobj.put("Lng", rs.getInt("Lng"));
+                    JSONArray jarr3 = new JSONArray();
+                    JSONObject jobj2 = new JSONObject();
+                    jobj2.put("Type",rs.getString("type"));
+                    jobj2.put("Prob",rs.getString("currentQuantity"));
+                    jobj2.put("maxProb",rs.getString("maxQuantity"));
+                    jarr3.add(jobj2);
+                    jobj2 = new JSONObject();
+                    String type2="",type3="";
+                    if (rs.getString("type").equals("stone")) {
+                        type2="obsidian";
+                        type3="iron";
+                    }
+                    if (rs.getString("type").equals("wood")) {
+                        type2="amber";
+                        type3="redwood";
+                    }
+                    if (rs.getString("type").equals("grain")) {
+                        type2="hop";
+                        type3="wool";
+                    }
+                    jobj2.put("Type",type2);
+                    jobj2.put("Prob",rs.getString("currentQuantity2"));
+                    jobj2.put("maxProb",rs.getString("maxQuantity2"));
+                    jarr3.add(jobj2);
+
+                    jobj2 = new JSONObject();
+                    jobj2.put("Type",type3);
+                    jobj2.put("Prob",rs.getString("currentQuantity3"));
+                    jobj2.put("maxProb",rs.getString("maxQuantity3"));
+                    jarr3.add(jobj2);
+
+                jobj.put("Survey",jarr3);
+                jarr2.add(jobj);
+            }
+            rs.close();
+            query.close();
+            jresult.put("Surveys",jarr2);
+
+
         } catch (SQLException e) {
             jresult.put("Result","DB001");
             jresult.put("Message","Ошибка обращения к БД");
@@ -2479,7 +2530,7 @@ public class Player {
     }
 //End of Ex-Client
 
-    private void countSurvey(int TLAT, int TLNG, String restype)
+/*    private void countSurvey(int TLAT, int TLNG, String restype)
     {
         int scaleLat, scaleLng;
         int quantity=1000;
@@ -2537,7 +2588,7 @@ public class Player {
 
         currentQuantity=(int)(maxQuantity*extractKoef);
     }
-
+*/
     private boolean updateExtraction(int TLAT, int TLNG, String restype) {
         try {
             PreparedStatement query=con.prepareStatement("insert into extraction values(?,?,?,NOW())");
@@ -2574,23 +2625,22 @@ public class Player {
     }
 
     private String survey(int TLAT, int TLNG) {
-        /*countSurvey(TLAT,TLNG,restype);
+
         try {
-            if (maxQuantity != -1 && payResources("Hirelings", 10) && updateSurveys(TLAT, TLNG, restype)) {
-                Hirelings-=10;
-                con.commit();
-                jresult.put("Result", "OK");
-                //все кроме Result OK временно для тестирования. остальная информация будет приходить после завершения сюрвея через гетМесседж
-                //jresult.put("resType",restype);
-                //jresult.put("quantity", currentQuantity);
-                //jresult.put("maxQuantity", maxQuantity);
-            } else {
-                con.rollback();
-                jresult.put("Result", "DB001");
-            }
+            PreparedStatement query=con.prepareStatement("insert into surveys (GUID,PGUID,lat,lng,created) values (?,?,?,?,NOW())");
+            query.setString(1,UUID.randomUUID().toString());
+            query.setString(2,GUID);
+            query.setInt(3,TLAT);
+            query.setInt(4,TLNG);
+            query.execute();
+            con.commit();
+            jresult.put("Result","OK");
         }
-        catch (SQLException e) {Logwrite("survey","SQL error: "+e.toString());jresult.put("Result", "DB001");}
-        */
+        catch (SQLException e) {
+            Logwrite("survey","SQL error: "+e.toString());
+            jresult.put("Result", "DB001");
+        }
+
         return jresult.toString();
     }
 
@@ -2605,24 +2655,6 @@ public class Player {
         catch (SQLException e) {
             Logwrite("removeSurvey","SQL error: "+e.toString());jresult.put("Result", "DB001");
             }
-        return jresult.toString();
-    }
-
-    private String extract(int TLAT, int TLNG, String restype) {
-        countSurvey(TLAT,TLNG,restype);
-        try {
-            if (maxQuantity != -1 && updateExtraction(TLAT, TLNG, restype) && addResource(restype, currentQuantity) && payResources("Hirelings",100) ) {
-                Hirelings-=100;
-                con.commit();
-                jresult.put("Result", "OK");
-                //jresult.put("resType", restype);
-                jresult.put("quantity", currentQuantity);
-            } else {
-                con.rollback();
-                jresult.put("Result", "DB001");
-            }
-        }
-        catch (SQLException e) {Logwrite("extract","SQL error: "+e.toString());jresult.put("Result", "DB001");}
         return jresult.toString();
     }
 
@@ -2654,6 +2686,7 @@ public class Player {
         }
     }
 
+    //TODO рефакторинг нужен, скопировал ее в World
     private double koefDepletion(int TLAT, int TLNG) {
         double extractKoef=0.0;
         try {

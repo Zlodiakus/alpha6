@@ -14,6 +14,9 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Random;
 
+import static main.MyUtils.Logwrite;
+import static main.MyUtils.isBetween;
+
 
 /**
  * Created by Well on 30.01.2016.
@@ -444,21 +447,221 @@ public World() throws SQLException {
         */
     }
 
+    private boolean isGrain(int TLAT, int TLNG) {
+        int x = TLAT/1000;
+        int y = TLNG/1000;
+        if ( ( ( (x+1) % 4 == 0 ) || ( (x+1) % 6 == 0 ) ) && ( ( (y+1) % 3 == 0 ) || ((y+1) % 7 == 0) ) && ( ((x+y) % 3 == 0 ) || (x+y+3) % 5 == 0 ) )
+            return true;
+        else 
+            return false;
+    }
+
+    private boolean isWood(int TLAT, int TLNG) {
+        int x = TLAT/1000;
+        int y = TLNG/1000;
+        if ( ( x % 2 == 0 ) && ( ( y % 3 == 0 ) || ( y % 5 == 0) ) && ( (x+y) % 4 < 2 ) )
+            return true;
+        else
+            return false;
+    }
+
+    private boolean isStone(int TLAT, int TLNG) {
+        int x = TLAT/1000;
+        int y = TLNG/1000;
+        if ( ( (x % 3 == 0) || (x % 4 == 0) ) && ( y % 3 == 0 ) && ( (x+y) % 2 == 0 ) )
+            return true;
+        else
+            return false;
+    }
+
+    private boolean isHop(int TLAT, int TLNG) {
+        if (isGrain(TLAT,TLNG))
+        {
+            int x = TLAT/1000;
+            int y = TLNG/1000;
+            if ( ( x % 5 == 0 )  &&  ( y % 2 == 0 ) )
+                return true;
+        }
+        return false;
+    }
+
+    private boolean isWool(int TLAT, int TLNG) {
+        if (isGrain(TLAT,TLNG))
+        {
+            int x = TLAT/1000;
+            int y = TLNG/1000;
+            if ( ( ( x % 3 == 0 ) || ( x % 7 == 0) ) &&  ( ( y % 5 == 0 ) || ( y % 6 == 0 ) ) )
+                return true;
+        }
+        return false;
+    }
+
+    private boolean isAmber(int TLAT, int TLNG) {
+        if (isWood(TLAT,TLNG))
+        {
+            int x = TLAT/1000;
+            int y = TLNG/1000;
+            if ( ( x % 3 == 0 )  &&  ( y % 6 == 0 ) )
+                return true;
+        }
+        return false;
+    }
+
+    private boolean isRedwood(int TLAT, int TLNG) {
+        if (isWood(TLAT,TLNG))
+        {
+            int x = TLAT/1000;
+            int y = TLNG/1000;
+            if ( ( ( x % 5 == 0 ) || ( x % 6 == 0) ) &&  ( ( y % 2 == 0 ) || ( y % 9 == 0 ) ) )
+                return true;
+        }
+        return false;
+    }
+
+    private boolean isObsidian(int TLAT, int TLNG) {
+        if (isStone(TLAT,TLNG))
+        {
+            int x = TLAT/1000;
+            int y = TLNG/1000;
+            if ( ( x % 2 == 0 )  &&  ( y % 4 == 0 ) )
+                return true;
+        }
+        return false;
+    }
+
+    private boolean isIron(int TLAT, int TLNG) {
+        if (isStone(TLAT,TLNG))
+        {
+            int x = TLAT/1000;
+            int y = TLNG/1000;
+            if ( ( ( x % 7 == 0 ) || ( x % 6 == 0) ) &&  ( ( y % 2 == 0 ) || ( y % 9 == 0 ) ) )
+                return true;
+        }
+        return false;
+    }
+
+
+    private double koefDepletion(int TLAT, int TLNG) {
+        double extractKoef=0.0;
+        try {
+            PreparedStatement query=con.prepareStatement("select count(1) from extraction where lat between ? and ? and lng between ? and ? and finished>NOW()-1");
+            query.setInt(1,TLAT/1000);
+            query.setInt(2,TLAT/1000+999);
+            query.setInt(3,TLNG/1000);
+            query.setInt(4,TLNG/1000+999);
+            ResultSet rs=query.executeQuery();
+            rs.first();
+            int extracts=rs.getInt(1);
+            if (isBetween(extracts,0,19)) {extractKoef=1.0;}
+            else if (isBetween(extracts,20,39)) {extractKoef=0.9;}
+            else if (isBetween(extracts,40,59)) {extractKoef=0.8;}
+            else if (isBetween(extracts,60,79)) {extractKoef=0.7;}
+            else if (isBetween(extracts,80,99)) {extractKoef=0.6;}
+            else if (isBetween(extracts,100,119)) {extractKoef=0.5;}
+            else if (isBetween(extracts,120,139)) {extractKoef=0.4;}
+            else if (isBetween(extracts,140,159)) {extractKoef=0.3;}
+            else if (isBetween(extracts,160,179)) {extractKoef=0.2;}
+            else {extractKoef=0.1;}
+        }
+        catch (SQLException e) {
+            Logwrite("World.koefDepletion","SQL Error: "+e.toString());
+        }
+        return extractKoef;
+    }
+
     public void checkSurveysFinish() {
-        PreparedStatement query;
+        PreparedStatement query, query2;
         ResultSet rs;
         //JSONObject jresult = new JSONObject();
         String messageText;
         String resType;
+        String SurGUID, PGUID;
+        int TLAT, TLNG;
+        String type;
+        int probMain=0, probR1=0, probR2=0, curProb=0, curProbR1=0, curProbR2=0;
+
         try {
-            query = con.prepareStatement("select PGUID, lat, lng, type, maxQuantity, currentQuantity from surveys where not done and created<NOW()-5/1440");
+            query = con.prepareStatement("select GUID, PGUID, lat, lng from surveys where not done and created<NOW()-5/1440");
             rs = query.executeQuery();
-            //похерим ли тут отправку сообщения, если между вычиткой и апдейтов будет зазор. надежнее (но медленнее) апедейтить по одной строчке в выборке
-            query = con.prepareStatement("update surveys set done=true where not done and created<NOW()-5/1440");
-            query.execute();
+            //похерим ли тут отправку сообщения, если между вычиткой и апдейтом будет зазор. надежнее (но медленнее) апедейтить по одной строчке в выборке
+            //вот и не будем, теперь кучу важной инфы по каждой записи надо апдейтить
+            //query2 = con.prepareStatement("update surveys set done=true where not done and created<NOW()-5/1440");
+            //query2.execute();
             if (rs.isBeforeFirst()) {
                 while (rs.next()) {
-                    switch (rs.getString("type")) {
+                    SurGUID=rs.getString("GUID");
+                    PGUID=rs.getString("PGUID");
+                    TLAT=rs.getInt("lat");
+                    TLNG=rs.getInt("lng");
+
+                    if (isGrain(TLAT,TLNG)) {
+                        //Проверяем на хмель и шерсть, возвращаем процент зерна и редких если есть
+                        type="grain";
+                        probMain=80;
+                        probR1=1;
+                        probR2=1;
+                        if (isHop(TLAT,TLNG)) {
+                            probR1=5;
+                        }
+                        if (isWool(TLAT,TLNG)) {
+                            probR2=5;
+                        }
+                    }
+                    else if (isWood(TLAT,TLNG)) {
+                        //Проверяем на янтарь и красное дерево, возвращаем процент дерева и редких если есть
+                        type="wood";
+                        probMain=80;
+                        probR1=1;
+                        probR2=1;
+                        if (isAmber(TLAT,TLNG)) {
+                            probR1=5;
+                        }
+                        if (isRedwood(TLAT,TLNG)) {
+                            probR2=5;
+                        }
+
+                    }
+                    else if (isStone(TLAT,TLNG)) {
+                        //Проверяем на обсидиан и железо, возвращаем процент камня и редких если есть
+                        type="stone";
+                        probMain=80;
+                        probR1=1;
+                        probR2=1;
+                        if (isObsidian(TLAT,TLNG)) {
+                            probR1=5;
+                        }
+                        if (isIron(TLAT,TLNG)) {
+                            probR2=5;
+                        }
+                    }
+                    else {
+                        //Ничего нет, возвращаем нули
+                        type="nothing";
+                        probMain=0;
+                        probR1=0;
+                        probR2=0;
+                    }
+
+                    double koef=koefDepletion(TLAT,TLNG);
+                    curProb = (int) (probMain*koef);
+                    curProbR1 = (int) (probR1*koef);
+                    curProbR2 = (int) (probR2*koef);
+
+                    //апдейтим запись в сюрвее
+                    query2 = con.prepareStatement("update surveys set type=?, maxQuantity=?, currentQuantity=?, maxQuantity2=?, currentQuantity2=?, maxQuantity3=?, currentQuantity3=?, done=1 where GUID=?");
+                    query2.setString(1,type);
+                    query2.setInt(2,probMain);
+                    query2.setInt(3,curProb);
+                    query2.setInt(4,probR1);
+                    query2.setInt(5,curProbR1);
+                    query2.setInt(6,probR2);
+                    query2.setInt(7,curProbR2);
+                    query2.setString(8,SurGUID);
+                    query2.execute();
+                    con.commit();
+
+                    //формируем сообщение игроку - переделать эту убогость попозже и добавить редкие ресурсы
+                    switch (type) {
                         case "wood":
                             resType="Дерево";
                             break;
@@ -473,8 +676,8 @@ public World() throws SQLException {
                     }
                     //jresult.put("maxQuantity",rs.getInt("maxQuantity"));
                     //jresult.put("currentQuantity",rs.getInt("currentQuantity"));
-                    messageText="Ваши геологи завершили исследование местности!\nРесурс: "+resType+".\nМаксимальное количество: "+rs.getInt("maxQuantity")+".\nТекущее количество:"+rs.getInt("currentQuantity")+".";
-                    MyUtils.Message(rs.getString("PGUID"),messageText,5,0,rs.getInt("lat"),rs.getInt("lng"));
+                    messageText="Ваши геологи завершили исследование местности!\nРесурс: "+resType+".\nМаксимальная вероятность добычи за одну попытку: "+probMain+"%.\nТекущая вероятность добычи за одну попытку:"+curProb+"%.";
+                    MyUtils.Message(rs.getString("PGUID"),messageText,5,0,TLAT,TLNG);
                 }
             }
 
