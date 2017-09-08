@@ -2150,7 +2150,7 @@ public class Player {
                 Logwrite("Player.getPortalInfo","Finish.");
                 break;
             case "portalDonate":
-                result=portalDonate(GOLD,OBSIDIAN);
+                result=portalDonate(TGUID,GOLD,OBSIDIAN);
                 break;
             case "removeSurvey":
                 result=removeSurvey(TGUID);
@@ -3014,35 +3014,41 @@ public class Player {
         return portal.getInfo().toString();
     }
 
-    private String portalDonate(int GOLD, int OBSIDIAN) {
-        Logwrite("Player.portalDonate","Start. Gold="+GOLD+". Obsidian="+OBSIDIAN);
-        if (payResources("Gold",GOLD) && payResources("Obsidian", OBSIDIAN)) {
-            //commit(con);
-            JSONObject jobj = new JSONObject();
-            Portal portal = new Portal(Race, con);
-            jresult = portal.Donate(GOLD, OBSIDIAN);
+    private String portalDonate(String TGUID, int GOLD, int OBSIDIAN) {
+        Logwrite("Player.portalDonate", "Start. Gold=" + GOLD + ". Obsidian=" + OBSIDIAN);
+        if (!checkRangeToObj(TGUID)) {
+            jresult.put("Result", "O2202");
+            jresult.put("Message", "Башня слишком далеко!");
+        } else {
+            if (payResources("Gold", GOLD) && payResources("Obsidian", OBSIDIAN)) {
+                //commit(con);
+                JSONObject jobj = new JSONObject();
+                Portal portal = new Portal(Race, con);
+                jresult = portal.Donate(GOLD, OBSIDIAN);
 
-            if (jresult.toString().contains("DB001"))
-            {
-                rollback(con); return jresult.toString();
+                if (jresult.toString().contains("DB001")) {
+                    rollback(con);
+                    return jresult.toString();
+                }
+
+                addStat("donatedGold", GOLD);
+                addStat("donatedObsidian", OBSIDIAN);
+
+                jobj.put("Type", "Gold");
+                jobj.put("Quantity", readResource("Gold"));
+
+                jobj = new JSONObject();
+                jobj.put("Type", "Obsidian");
+                jobj.put("Quantity", readResource("Obsidian"));
+                jarr.add(jobj);
+                jresult.put("playerRes", jarr);
+                jresult.put("Result", "OK");
+                Logwrite("Player.portalDonate", "Finish. OK");
+            } else {
+                jresult.put("Result", "O2201");
+                Logwrite("Player.portalDonate", "Finish. Error");
             }
-
-            addStat("donatedGold",GOLD);
-            addStat("donatedObsidian",OBSIDIAN);
-
-            jobj.put("Type","Gold");
-            jobj.put("Quantity",readResource("Gold"));
-
-            jobj=new JSONObject();
-            jobj.put("Type","Obsidian");
-            jobj.put("Quantity",readResource("Obsidian"));
-            jarr.add(jobj);
-            jresult.put("playerRes",jarr);
-            jresult.put("Result","OK");
-            Logwrite("Player.portalDonate","Finish. OK");
         }
-        else {jresult.put("Result","O2201");Logwrite("Player.portalDonate","Finish. Error");};
-
         return jresult.toString();
     }
 
