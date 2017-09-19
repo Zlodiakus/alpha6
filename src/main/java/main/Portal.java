@@ -32,24 +32,30 @@ public class Portal {
         catch (SQLException e) {Logwrite("Portal","SQL Error: "+e.toString());}
     }
 
-  /*  private JSONArray portalNeed() {
-        JSONArray jarr = new JSONArray();
-        JSONObject jobj = new JSONObject();
+    private JSONArray readEffects() {
+        JSONArray jarr;
+        JSONObject jobj;
         try{
-            PreparedStatement query=con.prepareStatement("select Gold, Obsidian from portalCost where level=?");
-            query.setInt(1,Level+1);
+            PreparedStatement query=con.prepareStatement("select effect, max(value) kolvo from portalEffects where level<=? group by effect");
+            query.setInt(1,Level);
             ResultSet rs=query.executeQuery();
-            rs.first();
-            jobj.put("Gold",rs.getInt("Gold"));
-            jobj.put("Obsidian",rs.getInt("Obsidian"));
-            jarr.add(jobj);
-            return jarr;
+            jarr = new JSONArray();
+            if (rs.isBeforeFirst()) {
+                while (rs.next()) {
+                    jobj=new JSONObject();
+                    jobj.put("Type",rs.getString("effect"));
+                    jobj.put("Quantity",rs.getString("kolvo"));
+                    jarr.add(jobj);
+                }
+            }
         }
-        catch (SQLException e) {Logwrite("portalNeed","SQL Error: "+e.toString());jarr.clear();return jarr;}
+        catch (SQLException e) {jarr = new JSONArray();Logwrite("readEffects","SQL Error: "+e.toString());}
+        return jarr;
     }
-*/
 
-      private void portalNeed() {
+
+
+    private void portalNeed() {
         //TODO Проверку на максимальный уровень
           try{
             PreparedStatement query=con.prepareStatement("select Gold, Obsidian from portalCost where level=?");
@@ -91,6 +97,9 @@ public class Portal {
         jarr.add(jobj);
 
         jresult.put("portalNeed",jarr);
+        jarr = readEffects();
+        jresult.put("portalEffects",jarr);
+
         Logwrite("Portal.getInfo","Finish.");
         return jresult;
     }
