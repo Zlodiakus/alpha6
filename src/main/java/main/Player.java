@@ -3057,9 +3057,10 @@ public class Player {
         int res;
         PreparedStatement query;
         try {
-            query = con.prepareStatement("select sum(value) from effects where PGUID=? and effect=? and (time is null or time>=NOW())");
+            query = con.prepareStatement("select sum(value) from effects where (PGUID=? or PGUID=?) and effect=? and (time is null or time>=NOW())");
             query.setString(1,GUID);
-            query.setString(2,effectType);
+            query.setString(2,Integer.toString(Race));
+            query.setString(3,effectType);
             ResultSet rs=query.executeQuery();
             rs.first();
             res=rs.getInt(1);
