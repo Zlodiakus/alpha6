@@ -109,9 +109,23 @@ public class Portal {
         }
     }
 
+    private void setPortalEffect(int level) {
+        try{
+            PreparedStatement query=con.prepareStatement("insert into effects (PGUID,effect,value,source) (select ?,effect,value,'portal' from portalEffects where level=?) ON DUPLICATE KEY UPDATE value=(select value from portalEffects where level=?)");
+            query.setString(1,Integer.toString(Race));
+            query.setInt(2,level);
+            query.setInt(3,level);
+            query.execute();
+            con.commit();
+        }
+        catch (SQLException e) {Logwrite("setPortalEffect","SQL Error: "+e.toString());}
+    }
+
     private void checkForLevel() {
         if (Gold>=nextGold && Obsidian >=nextObsidian) {
             Level+=1;
+            //добавить/обновить эффект
+            setPortalEffect(Level);
             //Отправить сообщения всем игрокам фракции
             MyUtils.MessageFrac(Race,"Построен уровень портала фракции! Текущий уровень: "+Level,10,0,0,0);
             Gold-=nextGold;

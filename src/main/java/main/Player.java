@@ -19,6 +19,7 @@ import main.MyUtils;
 import static java.lang.System.in;
 import static main.MyUtils.Logwrite;
 import static main.MyUtils.isBetween;
+import main.Params;
 
 
 /**
@@ -1486,6 +1487,7 @@ public class Player {
                         actionGold=bonus;
                         actionExp+=(20 + Math.min(720, ambush.TTS + 180))*5;
                         actionExp*=2;
+                        actionExp=(actionExp*(100+getEffect("exp")))/100;
                         jobj.put("Exp",actionExp);
                         jobj.put("Gold",actionGold);
                         //TODO payResources не вычитает значения из соответствующей переменной плеера. либо убирать эти переменные из плеера, либо уменьшать их параллельно
@@ -1646,7 +1648,7 @@ public class Player {
                                 //actionGold=(int)Math.floor((50 + cargo2) * (100+(float)trade)/100);
                                 //actionExp=50 + cargo2;
                                 actionGold=0;
-                                actionExp=1000;
+                                actionExp=1000+10*getEffect("exp"); //1000*(1+getEffect("exp")/100);
                                 jresult.put("Exp",actionExp);
                                 jresult.put("Gold",actionGold);
                                 getGold(actionGold);
@@ -1815,7 +1817,7 @@ public class Player {
                                     //int actionGold=(int)Math.floor((50 + cargo2) * (100+(float)trade)/100);
                                     //int actionExp=50 + cargo2;
                                     int actionGold=0;
-                                    int actionExp=1000;
+                                    int actionExp=1000+10*getEffect("exp"); //1000*(1+getEffect("exp")/100);
                                     jresult.put("Exp",actionExp);
                                     jresult.put("Gold",actionGold);
                                     getGold(actionGold);
@@ -2436,7 +2438,7 @@ public class Player {
                 City city = new City(con,CGUID);
                 //mapper=getPlayerUpgradeEffect2("founder");
                 jresult = city.createCity(GUID, TLAT, TLNG);
-                int actionExp=2500;
+                int actionExp=2500+25*getEffect("exp"); //2500*(1+getEffect("exp")/100);
                 getExp(actionExp);
                 commit(con);
                 jresult.put("Exp",actionExp);
@@ -3052,5 +3054,20 @@ public class Player {
         return jresult.toString();
     }
 
+    protected int getEffect(String effectType) {
+        int res;
+        PreparedStatement query;
+        try {
+            query = con.prepareStatement("select sum(value) from effects where PGUID=? and effect=? and (time is null or time>=NOW())");
+            query.setString(1,GUID);
+            query.setString(2,effectType);
+            ResultSet rs=query.executeQuery();
+            rs.first();
+            res=rs.getInt(1);
+            rs.close();
+            query.close();
+        } catch (SQLException e) {Logwrite("getEffect","SQL Error: "+e.toString());return 0;}
+        return res;
+    }
 }
 
