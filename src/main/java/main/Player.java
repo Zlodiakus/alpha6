@@ -2786,7 +2786,7 @@ public class Player {
     private String startExtract(int TLAT, int TLNG, String startTime) {
         //проверить на сюрвей?
         try {
-            PreparedStatement query = con.prepareStatement("select 1 from surveys where PGUID=? and lat % ? = ? and lng % ? = ? and done=1");
+            PreparedStatement query = con.prepareStatement("select 1 from surveys where PGUID=? and floor( lat / ?) = ? and floor( lng / ?) = ? and done=1");
             query.setString(1, GUID);
             query.setInt(2, Params.resLatSize);
             query.setInt(3, TLAT / Params.resLatSize);
