@@ -324,11 +324,11 @@ public class MyUtils {
 		PreparedStatement query;
 		try {
 			con = DBUtils.ConnectDB();
-			query = con.prepareStatement("select PGUID from Players where Race=?");
+			query = con.prepareStatement("select GUID from Players where Race=?");
 			query.setInt(1,Race);
 			ResultSet rs = query.executeQuery();
 			while (rs.next()) {
-				Message(rs.getString("PGUID"),Mess,Type,State,Lat,Lng);
+				Message(rs.getString("GUID"),Mess,Type,State,Lat,Lng);
 			}
 			con.close();
 		} catch (SQLException | NamingException e) {
