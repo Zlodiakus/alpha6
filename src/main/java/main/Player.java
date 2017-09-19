@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
 import main.MyUtils;
@@ -2064,7 +2065,7 @@ public class Player {
     }
 
 
-    public String sendData(String ReqName, String TGUID, int TLAT, int TLNG, int RACE, int AMOUNT, String text, String ItemType, int Quantity, String clientTime, int GOLD, int OBSIDIAN) {
+    public String sendData(String ReqName, String TGUID, int TLAT, int TLNG, int RACE, int AMOUNT, String text, String ItemType, int Quantity, int clientTime, int GOLD, int OBSIDIAN) {
         //MyUtils.Logwrite("sendData","дошли");
         String result;
         switch (ReqName) {
@@ -2670,13 +2671,14 @@ public class Player {
         }
     }
 
-    private boolean addEntryToExtraction(int TLAT, int TLNG, String startTime) {
+    private boolean addEntryToExtraction(int TLAT, int TLNG, int startTime) {
+        Date data = new Date(startTime);
         try {
             PreparedStatement query=con.prepareStatement("insert into extraction (PGUID,lat,lng,started,clientStarted) values (?,?,?,NOW(),?)");
             query.setString(1,GUID);
             query.setInt(2,TLAT);
             query.setInt(3,TLNG);
-            query.setString(4,startTime);
+            query.setString(4,data.toString());
             query.execute();
             con.commit();
             return true;
@@ -2783,7 +2785,7 @@ public class Player {
     return jres;
     }
 
-    private String startExtract(int TLAT, int TLNG, String startTime) {
+    private String startExtract(int TLAT, int TLNG, int startTime) {
         //проверить на сюрвей?
         try {
             PreparedStatement query = con.prepareStatement("select 1 from surveys where PGUID=? and floor( lat / ?) = ? and floor( lng / ?) = ? and done=1");
@@ -2801,6 +2803,7 @@ public class Player {
         }
         catch (SQLException e) {
             jresult.put("Result","DB001");
+            Logwrite("startExtract","SQL Error: "+e.toString());
             return jresult.toString();
         }
 
@@ -2814,10 +2817,11 @@ public class Player {
         return jresult.toString();
     }
 
-    private boolean finishEntryInExtraction(String finishTime) {
+    private boolean finishEntryInExtraction(int finishTime) {
+        Date data=new Date(finishTime);
         try {
             PreparedStatement query=con.prepareStatement("update extraction set finished=NOW(), clientFinished=? where PGUID=? and finished is null");
-            query.setString(1,finishTime);
+            query.setString(1,data.toString());
             query.setString(2,GUID);
             query.execute();
             con.commit();
@@ -2829,7 +2833,7 @@ public class Player {
         }
     }
 
-    private String finishExtract(String finishTime) {
+    private String finishExtract(int finishTime) {
         int TLAT,TLNG;
         try {
             PreparedStatement query=con.prepareStatement("select lat,lng from extraction where finished is null and PGUID=?");

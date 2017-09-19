@@ -28,8 +28,9 @@ String QuantityS=request.getParameter("Quantity");
 if (QuantityS == null) QuantityS="0";
 int Quantity=Integer.parseInt(QuantityS);
 
-String resType=request.getParameter("resType");
-if (resType == null) resType="";
+String SclientTime=request.getParameter("clientTime");
+if (SclientTime == null) SclientTime="0";
+
 
 String sGold=request.getParameter("Gold");
 if (sGold == null) sGold="0";
@@ -39,6 +40,7 @@ if (sObsidian == null) sObsidian="0";
 int Gold=Integer.parseInt(sGold);
 int Obsidian=Integer.parseInt(sObsidian);
 
+int clientTime=Integer.parseInt(SclientTime);
 int PLAT=Integer.parseInt(PLatS);
 int PLNG=Integer.parseInt(PLngS);
 int LAT=Integer.parseInt(LatS);
@@ -52,7 +54,7 @@ int AMOUNT=Integer.parseInt(AMOUNTS);
 //check=false;
 if (check) {
 Player player=new Player(token, PLAT, PLNG);
-result = player.sendData(ReqName,TGUID,LAT,LNG,RACE,AMOUNT,text,ItemType,Quantity,resType,Gold,Obsidian);
+result = player.sendData(ReqName,TGUID,LAT,LNG,RACE,AMOUNT,text,ItemType,Quantity,clientTime,Gold,Obsidian);
 }
 else {
 result="Check parameters";
