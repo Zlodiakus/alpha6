@@ -2795,6 +2795,7 @@ public class Player {
             ResultSet rs = query.executeQuery();
             if (!rs.isBeforeFirst()) {
                 jresult.put("Result","O2101");
+                Logwrite("startExtract","GUID="+GUID+", resLatSize="+Params.resLatSize+", TLAT / Params.resLatSize="+Integer.toString(TLAT / Params.resLatSize)+", Params.resLngSize="+Params.resLngSize+", TLNG / Params.resLngSize="+Integer.toString(TLAT / Params.resLngSize));
                 return jresult.toString();
             }
         }
