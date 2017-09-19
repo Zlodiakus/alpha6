@@ -448,8 +448,8 @@ public World() throws SQLException {
     }
 
     private boolean isGrain(int TLAT, int TLNG) {
-        int x = TLAT/1000;
-        int y = TLNG/1000;
+        int x = TLAT/Params.resLatSize;
+        int y = TLNG/Params.resLngSize;
         if ( ( ( (x+1) % 4 == 0 ) || ( (x+1) % 6 == 0 ) ) && ( ( (y+1) % 3 == 0 ) || ((y+1) % 7 == 0) ) && ( ((x+y) % 3 == 0 ) || (x+y+3) % 5 == 0 ) )
             return true;
         else 
@@ -457,8 +457,8 @@ public World() throws SQLException {
     }
 
     private boolean isWood(int TLAT, int TLNG) {
-        int x = TLAT/1000;
-        int y = TLNG/1000;
+        int x = TLAT/Params.resLatSize;
+        int y = TLNG/Params.resLngSize;
         if ( ( x % 2 == 0 ) && ( ( y % 3 == 0 ) || ( y % 5 == 0) ) && ( (x+y) % 4 < 2 ) )
             return true;
         else
@@ -466,8 +466,8 @@ public World() throws SQLException {
     }
 
     private boolean isStone(int TLAT, int TLNG) {
-        int x = TLAT/1000;
-        int y = TLNG/1000;
+        int x = TLAT/Params.resLatSize;
+        int y = TLNG/Params.resLngSize;
         if ( ( (x % 3 == 0) || (x % 4 == 0) ) && ( y % 3 == 0 ) && ( (x+y) % 2 == 0 ) )
             return true;
         else
@@ -477,8 +477,8 @@ public World() throws SQLException {
     private boolean isHop(int TLAT, int TLNG) {
         if (isGrain(TLAT,TLNG))
         {
-            int x = TLAT/1000;
-            int y = TLNG/1000;
+            int x = TLAT/Params.resLatSize;
+            int y = TLNG/Params.resLngSize;
             if ( ( x % 5 == 0 )  &&  ( y % 2 == 0 ) )
                 return true;
         }
@@ -488,8 +488,8 @@ public World() throws SQLException {
     private boolean isWool(int TLAT, int TLNG) {
         if (isGrain(TLAT,TLNG))
         {
-            int x = TLAT/1000;
-            int y = TLNG/1000;
+            int x = TLAT/Params.resLatSize;
+            int y = TLNG/Params.resLngSize;
             if ( ( ( x % 3 == 0 ) || ( x % 7 == 0) ) &&  ( ( y % 5 == 0 ) || ( y % 6 == 0 ) ) )
                 return true;
         }
@@ -499,8 +499,8 @@ public World() throws SQLException {
     private boolean isAmber(int TLAT, int TLNG) {
         if (isWood(TLAT,TLNG))
         {
-            int x = TLAT/1000;
-            int y = TLNG/1000;
+            int x = TLAT/Params.resLatSize;
+            int y = TLNG/Params.resLngSize;
             if ( ( x % 3 == 0 )  &&  ( y % 6 == 0 ) )
                 return true;
         }
@@ -510,8 +510,8 @@ public World() throws SQLException {
     private boolean isRedwood(int TLAT, int TLNG) {
         if (isWood(TLAT,TLNG))
         {
-            int x = TLAT/1000;
-            int y = TLNG/1000;
+            int x = TLAT/Params.resLatSize;
+            int y = TLNG/Params.resLngSize;
             if ( ( ( x % 5 == 0 ) || ( x % 6 == 0) ) &&  ( ( y % 2 == 0 ) || ( y % 9 == 0 ) ) )
                 return true;
         }
@@ -521,8 +521,8 @@ public World() throws SQLException {
     private boolean isObsidian(int TLAT, int TLNG) {
         if (isStone(TLAT,TLNG))
         {
-            int x = TLAT/1000;
-            int y = TLNG/1000;
+            int x = TLAT/Params.resLatSize;
+            int y = TLNG/Params.resLngSize;
             if ( ( x % 2 == 0 )  &&  ( y % 4 == 0 ) )
                 return true;
         }
@@ -532,8 +532,8 @@ public World() throws SQLException {
     private boolean isIron(int TLAT, int TLNG) {
         if (isStone(TLAT,TLNG))
         {
-            int x = TLAT/1000;
-            int y = TLNG/1000;
+            int x = TLAT/Params.resLatSize;
+            int y = TLNG/Params.resLngSize;
             if ( ( ( x % 7 == 0 ) || ( x % 6 == 0) ) &&  ( ( y % 2 == 0 ) || ( y % 9 == 0 ) ) )
                 return true;
         }
@@ -544,11 +544,11 @@ public World() throws SQLException {
     private double koefDepletion(int TLAT, int TLNG) {
         double extractKoef=0.0;
         try {
-            PreparedStatement query=con.prepareStatement("select count(1) from extraction where lat between ? and ? and lng between ? and ? and finished>NOW()-1");
-            query.setInt(1,TLAT/1000);
-            query.setInt(2,TLAT/1000+999);
-            query.setInt(3,TLNG/1000);
-            query.setInt(4,TLNG/1000+999);
+            PreparedStatement query=con.prepareStatement("select count(1) from extraction where lat % ? = ? and lng % ? = ? and finished>NOW()-1");
+            query.setInt(1,Params.resLatSize);
+            query.setInt(2,TLAT/Params.resLatSize);
+            query.setInt(3,Params.resLngSize);
+            query.setInt(4,TLNG/Params.resLngSize);
             ResultSet rs=query.executeQuery();
             rs.first();
             int extracts=rs.getInt(1);

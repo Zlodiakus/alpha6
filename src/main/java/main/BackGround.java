@@ -89,7 +89,7 @@ public class BackGround {
         MyUtils.Logwrite("BackGround.checkSurveys","Finished");
     }
 
-    @Schedule(hour="*", minute="1", second="33", persistent=false)
+/*    @Schedule(hour="*", minute="1", second="33", persistent=false)
     public void deleteOldSurveys() throws SQLException, NamingException {
         MyUtils.Logwrite("BackGround.deleteSurveys","Started");
         World world = new World();
@@ -97,5 +97,5 @@ public class BackGround {
         world.close();
         MyUtils.Logwrite("BackGround.deleteSurveys","Finished");
     }
-
+*/
 }

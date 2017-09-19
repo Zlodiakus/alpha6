@@ -21,7 +21,6 @@ import static main.MyUtils.Logwrite;
 import static main.MyUtils.isBetween;
 import main.Params;
 
-
 /**
  * Created by Well on 17.01.2016.
  * Player object
@@ -2693,10 +2692,10 @@ public class Player {
         double extractKoef=0.0;
         try {
             PreparedStatement query=con.prepareStatement("select count(1) from extraction where lat between ? and ? and lng between ? and ? and finished>NOW()-1");
-            query.setInt(1,TLAT/1000);
-            query.setInt(2,TLAT/1000+999);
-            query.setInt(3,TLNG/1000);
-            query.setInt(4,TLNG/1000+999);
+            query.setInt(1,TLAT/Params.resLatSize);
+            query.setInt(2,TLAT/Params.resLatSize+(Params.resLatSize-1));
+            query.setInt(3,TLNG/Params.resLngSize);
+            query.setInt(4,TLNG/Params.resLngSize+(Params.resLngSize-1));
             ResultSet rs=query.executeQuery();
             rs.first();
             int extracts=rs.getInt(1);
@@ -2724,10 +2723,10 @@ public class Player {
         try {
             PreparedStatement query=con.prepareStatement("select type, maxQuantity,maxQuantity2,maxQuantity3 from surveys where PGUID=? and lat between ? and ? and lng between ? and ? and done=1");
             query.setString(1,GUID);
-            query.setInt(2,TLAT/1000);
-            query.setInt(3,TLAT/1000+999);
-            query.setInt(4,TLNG/1000);
-            query.setInt(5,TLNG/1000+999);
+            query.setInt(2,TLAT/Params.resLatSize);
+            query.setInt(3,TLAT/Params.resLatSize+(Params.resLatSize-1));
+            query.setInt(4,TLNG/Params.resLngSize);
+            query.setInt(5,TLNG/Params.resLngSize+(Params.resLngSize-1));
             ResultSet rs=query.executeQuery();
             if (rs.isBeforeFirst()) {
                 rs.first();
@@ -2787,12 +2786,12 @@ public class Player {
     private String startExtract(int TLAT, int TLNG, String startTime) {
         //проверить на сюрвей?
         try {
-            PreparedStatement query = con.prepareStatement("select 1 from surveys where PGUID=? and lat between ? and ? and lng between ? and ? and done=1");
+            PreparedStatement query = con.prepareStatement("select 1 from surveys where PGUID=? and lat % ? = ? and lng % ? = ? and done=1");
             query.setString(1, GUID);
-            query.setInt(2, TLAT / 1000);
-            query.setInt(3, TLAT / 1000 + 999);
-            query.setInt(4, TLNG / 1000);
-            query.setInt(5, TLNG / 1000 + 999);
+            query.setInt(2, Params.resLatSize);
+            query.setInt(3, TLAT / Params.resLatSize);
+            query.setInt(4, Params.resLngSize);
+            query.setInt(5, TLNG / Params.resLngSize);
             ResultSet rs = query.executeQuery();
             if (!rs.isBeforeFirst()) {
                 jresult.put("Result","O2101");
