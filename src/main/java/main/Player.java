@@ -2066,7 +2066,7 @@ public class Player {
     }
 
 
-    public String sendData(String ReqName, String TGUID, int TLAT, int TLNG, int RACE, int AMOUNT, String text, String ItemType, int Quantity, int clientTime, int GOLD, int OBSIDIAN) {
+    public String sendData(String ReqName, String TGUID, int TLAT, int TLNG, int RACE, int AMOUNT, String text, String ItemType, int Quantity, long clientTime, int GOLD, int OBSIDIAN) {
         //MyUtils.Logwrite("sendData","дошли");
         String result;
         switch (ReqName) {
@@ -2672,7 +2672,7 @@ public class Player {
         }
     }
 
-    private boolean addEntryToExtraction(int TLAT, int TLNG, int startTime) {
+    private boolean addEntryToExtraction(int TLAT, int TLNG, long startTime) {
         Logwrite("addEntry","Start");
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date data = new Date(startTime);
@@ -2790,7 +2790,7 @@ public class Player {
     return jres;
     }
 
-    private String startExtract(int TLAT, int TLNG, int startTime) {
+    private String startExtract(int TLAT, int TLNG, long startTime) {
         //проверить на сюрвей?
         try {
             PreparedStatement query = con.prepareStatement("select 1 from surveys where PGUID=? and floor( lat / ?) = ? and floor( lng / ?) = ? and done=1");
@@ -2822,7 +2822,7 @@ public class Player {
         return jresult.toString();
     }
 
-    private boolean finishEntryInExtraction(int finishTime) {
+    private boolean finishEntryInExtraction(long finishTime) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date data=new Date(finishTime);
         String fTime = dateFormat.format(data);
@@ -2842,7 +2842,7 @@ public class Player {
         }
     }
 
-    private String finishExtract(int finishTime) {
+    private String finishExtract(long finishTime) {
         int TLAT,TLNG;
         try {
             PreparedStatement query=con.prepareStatement("select lat,lng from extraction where finished is null and PGUID=?");

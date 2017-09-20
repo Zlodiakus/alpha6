@@ -40,7 +40,7 @@ if (sObsidian == null) sObsidian="0";
 int Gold=Integer.parseInt(sGold);
 int Obsidian=Integer.parseInt(sObsidian);
 
-int clientTime=Integer.parseInt(SclientTime);
+long clientTime=Long.parseLong(SclientTime);
 int PLAT=Integer.parseInt(PLatS);
 int PLNG=Integer.parseInt(PLngS);
 int LAT=Integer.parseInt(LatS);
