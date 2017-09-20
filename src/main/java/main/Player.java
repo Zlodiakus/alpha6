@@ -11,6 +11,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Random;
@@ -2673,14 +2674,16 @@ public class Player {
 
     private boolean addEntryToExtraction(int TLAT, int TLNG, int startTime) {
         Logwrite("addEntry","Start");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date data = new Date(startTime);
-        Logwrite("addEntry","startTime="+data.toString());
+        String sTime = dateFormat.format(data);
+        Logwrite("addEntry","startTime="+sTime);
         try {
             PreparedStatement query=con.prepareStatement("insert into extraction (PGUID,lat,lng,started,clientStarted) values (?,?,?,NOW(),?)");
             query.setString(1,GUID);
             query.setInt(2,TLAT);
             query.setInt(3,TLNG);
-            query.setString(4,data.toString());
+            query.setString(4,sTime);
             query.execute();
             con.commit();
             return true;
@@ -2820,10 +2823,14 @@ public class Player {
     }
 
     private boolean finishEntryInExtraction(int finishTime) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date data=new Date(finishTime);
+        String fTime = dateFormat.format(data);
+        Logwrite("finishEntry","finishTime="+fTime);
+
         try {
             PreparedStatement query=con.prepareStatement("update extraction set finished=NOW(), clientFinished=? where PGUID=? and finished is null");
-            query.setString(1,data.toString());
+            query.setString(1,fTime);
             query.setString(2,GUID);
             query.execute();
             con.commit();
