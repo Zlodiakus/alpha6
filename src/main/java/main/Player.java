@@ -2769,6 +2769,8 @@ public class Player {
                 }
                 jobj.put("Quantity", quantity);
                 jarr.add(jobj);
+                quantity=0;
+
                 jobj=new JSONObject();
                 jobj.put("Type",type2);
                 maxProb=rs.getInt("maxQuantity2");
@@ -2781,6 +2783,7 @@ public class Player {
                     addResource(type2,quantity);
                 }
                 jobj.put("Quantity", quantity);
+                quantity=0;
 
                 jarr.add(jobj);
                 jobj=new JSONObject();
@@ -2865,6 +2868,7 @@ public class Player {
     }
 
     private String finishExtract(long finishTime) {
+        Logwrite("finishExtract",Name+" started");
         int TLAT,TLNG;
         try {
             PreparedStatement query=con.prepareStatement("select lat,lng from extraction where finished is null and PGUID=?");
@@ -2877,6 +2881,7 @@ public class Player {
                 if (finishEntryInExtraction(finishTime)) {
                     jresult=getResourcesFromExtraction(TLAT,TLNG);
                     con.commit();
+                    Logwrite("finishExtract",Name+" finished");
                 }
                 else jresult.put("Result","DB001");
             }
