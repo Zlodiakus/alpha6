@@ -2663,7 +2663,8 @@ public class Player {
 
     private void cancelUnfinishedExtraction() {
         try {
-            PreparedStatement query=con.prepareStatement("delete from extraction where finished is null");
+            PreparedStatement query=con.prepareStatement("delete from extraction where PGUID=? and finished is null");
+            query.setString(1,GUID);
             query.execute();
             con.commit();
         }
@@ -2728,12 +2729,12 @@ public class Player {
         JSONObject jres = new JSONObject();
         //в сюрвее должна быть инфа, тянем оттуда
         try {
-            PreparedStatement query=con.prepareStatement("select type, maxQuantity,maxQuantity2,maxQuantity3 from surveys where PGUID=? and lat between ? and ? and lng between ? and ? and done=1");
+            PreparedStatement query=con.prepareStatement("select type, maxQuantity,maxQuantity2,maxQuantity3 from surveys where PGUID=? and floor(lat / ?) = ? and floor(lng / ?) = ? and done=1");
             query.setString(1,GUID);
-            query.setInt(2,TLAT/Params.resLatSize);
-            query.setInt(3,TLAT/Params.resLatSize+(Params.resLatSize-1));
-            query.setInt(4,TLNG/Params.resLngSize);
-            query.setInt(5,TLNG/Params.resLngSize+(Params.resLngSize-1));
+            query.setInt(2,Params.resLatSize);
+            query.setInt(3,TLAT/Params.resLatSize);
+            query.setInt(4,Params.resLngSize);
+            query.setInt(5,TLNG/Params.resLngSize);
             ResultSet rs=query.executeQuery();
             if (rs.isBeforeFirst()) {
                 rs.first();
