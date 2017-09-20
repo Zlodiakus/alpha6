@@ -2672,7 +2672,9 @@ public class Player {
     }
 
     private boolean addEntryToExtraction(int TLAT, int TLNG, int startTime) {
+        Logwrite("addEntry","Start");
         Date data = new Date(startTime);
+        Logwrite("addEntry","startTime="+data.toString());
         try {
             PreparedStatement query=con.prepareStatement("insert into extraction (PGUID,lat,lng,started,clientStarted) values (?,?,?,NOW(),?)");
             query.setString(1,GUID);

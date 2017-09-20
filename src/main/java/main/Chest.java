@@ -134,9 +134,15 @@ public class Chest {
             query = con.prepareStatement("select type,value from tchests where GUID=?");
             query.setString(1, GUID);
             ResultSet rs = query.executeQuery();
-            rs.first();
-            type = rs.getString("type");
-            bonus = rs.getInt("value");
+            if (rs.isBeforeFirst()) {
+                rs.first();
+                type = rs.getString("type");
+                bonus = rs.getInt("value");
+            }
+            else {
+                type="gold";
+                bonus= 0;
+            }
         } catch (SQLException e) {type="gold"; bonus= 0;MyUtils.Logwrite("Chest.open","SQL Error: "+e.toString());}
     }
 
