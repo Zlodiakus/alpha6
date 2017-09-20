@@ -2725,6 +2725,7 @@ public class Player {
     }
 
     private JSONObject getResourcesFromExtraction(int TLAT, int TLNG) {
+        Random random;
         JSONObject jobj = new JSONObject();
         JSONObject jres = new JSONObject();
         //в сюрвее должна быть инфа, тянем оттуда
@@ -2755,32 +2756,52 @@ public class Player {
                 }
                 double koefDepl=koefDepletion(TLAT, TLNG);
 
+                int quantity=0;
                 jobj.put("Type",type1);
                 int maxProb=rs.getInt("maxQuantity");
-                jobj.put("MaxProb",maxProb);
+                //jobj.put("MaxProb",maxProb);
                 int prob=(int) (maxProb*koefDepl);
-                jobj.put("Prob",prob);
+                //jobj.put("Prob",prob);
+                random = new Random();
+                if (prob>=random.nextInt(100)) {
+                    quantity=1;
+                    addResource(type1,quantity);
+                }
+                jobj.put("Quantity", quantity);
                 jarr.add(jobj);
                 jobj=new JSONObject();
                 jobj.put("Type",type2);
                 maxProb=rs.getInt("maxQuantity2");
-                jobj.put("MaxProb",maxProb);
+                //jobj.put("MaxProb",maxProb);
                 prob=(int) (maxProb*koefDepl);
-                jobj.put("Prob",prob);
+                //jobj.put("Prob",prob);
+                random = new Random();
+                if (prob>=random.nextInt(100)) {
+                    quantity=1;
+                    addResource(type2,quantity);
+                }
+                jobj.put("Quantity", quantity);
+
                 jarr.add(jobj);
                 jobj=new JSONObject();
                 jobj.put("Type",type3);
                 maxProb=rs.getInt("maxQuantity3");
-                jobj.put("MaxProb",maxProb);
+                //jobj.put("MaxProb",maxProb);
                 prob=(int) (maxProb*koefDepl);
-                jobj.put("Prob",prob);
+                //jobj.put("Prob",prob);
+                random = new Random();
+                if (prob>=random.nextInt(100)) {
+                    quantity=1;
+                    addResource(type3,quantity);
+                }
+                jobj.put("Quantity", quantity);
                 jarr.add(jobj);
                 jres.put("Result","OK");
                 jres.put("Survey", jarr);
             }
             else {
                 //вообще сюда не должны попадать
-                Logwrite("getResourcesFromExtraction",GUID + "не получил ресурсы, т.к. не найден завершенный survey для области TLAT="+TLAT+", TLNG="+TLNG);
+                Logwrite("getResourcesFromExtraction",GUID + " не получил ресурсы, т.к. не найден завершенный survey для области TLAT="+TLAT+", TLNG="+TLNG);
                 jres.put("Result","O2401");
             }
         }
@@ -2855,6 +2876,7 @@ public class Player {
                 TLNG=rs.getInt("lng");
                 if (finishEntryInExtraction(finishTime)) {
                     jresult=getResourcesFromExtraction(TLAT,TLNG);
+                    con.commit();
                 }
                 else jresult.put("Result","DB001");
             }
