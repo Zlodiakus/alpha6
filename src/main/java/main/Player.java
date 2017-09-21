@@ -2158,6 +2158,9 @@ public class Player {
             case "removeSurvey":
                 result=removeSurvey(TGUID);
                 break;
+            case "getResourceInfo":
+                result=getResourceInfo();
+                break;
 
             default:
                 jresult.put("Result", "DB002");
@@ -3111,5 +3114,32 @@ public class Player {
         } catch (SQLException e) {Logwrite("getEffect","SQL Error: "+e.toString());return 0;}
         return res;
     }
+
+    private String getResourceInfo() {
+        JSONObject jobj;
+        JSONArray jarr;
+        PreparedStatement query;
+        try {
+            query = con.prepareStatement("select type,quantity from resources where PGUID=?");
+            query.setString(1,GUID);
+            ResultSet rs=query.executeQuery();
+            jarr = new JSONArray();
+            while (rs.next()) {
+                jobj = new JSONObject();
+                jobj.put("Type",rs.getString("type"));
+                jobj.put("Quantity",rs.getInt("quantity"));
+                jarr.add(jobj);
+            }
+            jresult.put("Result", "OK");
+            jresult.put("Resources",jarr);
+            rs.close();
+            query.close();
+        } catch (SQLException e) {
+            Logwrite("getResInfo","SQL Error: "+e.toString());
+            jresult.put("Result","DB001");
+        }
+        return jresult.toString();
+    }
+
 }
 
