@@ -2702,11 +2702,11 @@ public class Player {
     private double koefDepletion(int TLAT, int TLNG) {
         double extractKoef=0.0;
         try {
-            PreparedStatement query=con.prepareStatement("select count(1) from extraction where lat between ? and ? and lng between ? and ? and finished>NOW()-1");
-            query.setInt(1,TLAT/Params.resLatSize);
-            query.setInt(2,TLAT/Params.resLatSize+(Params.resLatSize-1));
-            query.setInt(3,TLNG/Params.resLngSize);
-            query.setInt(4,TLNG/Params.resLngSize+(Params.resLngSize-1));
+            PreparedStatement query=con.prepareStatement("select count(1) from extraction where floor(lat / ?) = ? and floor(lng / ?) = ? and finished>NOW()-1");
+            query.setInt(1,Params.resLatSize);
+            query.setInt(2,TLAT/Params.resLatSize);
+            query.setInt(3,Params.resLngSize);
+            query.setInt(4,TLNG/Params.resLngSize);
             ResultSet rs=query.executeQuery();
             rs.first();
             int extracts=rs.getInt(1);
