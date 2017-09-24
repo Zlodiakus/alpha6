@@ -544,7 +544,7 @@ public World() throws SQLException {
     private double koefDepletion(int TLAT, int TLNG) {
         double extractKoef=0.0;
         try {
-            PreparedStatement query=con.prepareStatement("select count(1) from extraction where floor(lat / ?) = ? and floor(lng / ?) = ? and finished>NOW()-1");
+            PreparedStatement query=con.prepareStatement("select count(1) from extraction where floor(lat / ?) = ? and floor(lng / ?) = ? and finished>NOW() - INTERVAL 1 DAY");
             query.setInt(1,Params.resLatSize);
             query.setInt(2,TLAT/Params.resLatSize);
             query.setInt(3,Params.resLngSize);
