@@ -3092,7 +3092,7 @@ public class Player {
                 Logwrite("Player.portalDonate", "Finish. OK");
             } else {
                 jresult.put("Result", "O2201");
-                Logwrite("Player.portalDonate", "Finish. Error");
+                Logwrite("Player.portalDonate", "Finish. Error (Не хватает ресурсов для доната).");
             }
         }
         return jresult.toString();
